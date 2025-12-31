@@ -1,0 +1,35 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  # 观测组件自身指标
+  - job_name: tempo
+    static_configs:
+      - targets: ["tempo:3200"]
+
+  - job_name: loki
+    static_configs:
+      - targets: ["loki:3100"]
+
+  - job_name: promtail
+    static_configs:
+      - targets: ["promtail:9080"]
+
+  - job_name: grafana
+    static_configs:
+      - targets: ["grafana:3000"]
+
+  # ===== 可选：如果你把 Dapr 运行在同一个 compose/network 里，就能自动抓到 =====
+  # Placement / Scheduler 的 metrics 默认在容器 9090 端口（compose 里映射到宿主 59090/59091）
+  - job_name: dapr-placement
+    static_configs:
+      - targets: ["dapr-placement:9090"]
+
+  - job_name: dapr-scheduler
+    static_configs:
+      - targets: ["dapr-scheduler:9090"]

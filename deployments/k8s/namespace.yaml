@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: enterprise-platform
+  labels:
+    app.kubernetes.io/name: enterprise-platform
+    app.kubernetes.io/managed-by: kubectl
+

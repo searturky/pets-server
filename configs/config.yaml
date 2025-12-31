@@ -1,0 +1,47 @@
+# 宠物养成游戏后端配置文件
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  mode: "debug"  # debug / release
+
+# PostgreSQL 数据库配置
+postgres:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  dbname: "pets_game"
+  sslmode: "disable"
+  max_open_conns: 100
+  max_idle_conns: 10
+
+# Redis 配置
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 100
+
+# 消息队列配置 (RabbitMQ)
+mq:
+  url: "amqp://guest:guest@localhost:5672/"
+  exchange: "pets_events"
+  queue: "pets_queue"
+
+# JWT 配置
+jwt:
+  secret: "your-secret-key-change-in-production"
+  expire_hours: 72
+
+# 微信小游戏配置
+wechat:
+  app_id: "your-app-id"
+  app_secret: "your-app-secret"
+
+# 日志配置
+log:
+  level: "debug"  # debug / info / warn / error
+  format: "json"  # json / text
+

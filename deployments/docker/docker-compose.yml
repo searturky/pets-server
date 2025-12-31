@@ -1,0 +1,270 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: enterprise-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: enterprise
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - enterprise-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: enterprise-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - enterprise-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RocketMQ NameServer
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.1.0
+    container_name: enterprise-rocketmq-namesrv
+    ports:
+      - "9876:9876"
+    environment:
+      JAVA_OPT_EXT: "-Xms256m -Xmx256m"
+    command: sh mqnamesrv
+    networks:
+      - enterprise-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9876 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RocketMQ Broker
+  rocketmq-broker:
+    image: apache/rocketmq:5.1.0
+    container_name: enterprise-rocketmq-broker
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+    environment:
+      JAVA_OPT_EXT: "-Xms256m -Xmx256m"
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+    command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.0/conf/broker.conf
+    depends_on:
+      - rocketmq-namesrv
+    networks:
+      - enterprise-network
+
+  # API网关
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.base
+      args:
+        SERVICE_NAME: gateway
+        SERVICE_PATH: ./services/gateway/cmd
+    container_name: enterprise-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=dev
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    networks:
+      - enterprise-network
+    restart: unless-stopped
+
+  # 用户服务
+  user-service:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.base
+      args:
+        SERVICE_NAME: user-service
+        SERVICE_PATH: ./services/user-service/cmd/api
+    container_name: enterprise-user-service
+    ports:
+      - "8001:8001"
+    environment:
+      - APP_ENV=dev
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=enterprise_user
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKETMQ_NAMESRV=rocketmq-namesrv:9876
+    depends_on:
+      - postgres
+      - redis
+      - rocketmq-namesrv
+    networks:
+      - enterprise-network
+    restart: unless-stopped
+
+  # 租户服务
+  tenant-service:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.base
+      args:
+        SERVICE_NAME: tenant-service
+        SERVICE_PATH: ./services/tenant-service/cmd/api
+    container_name: enterprise-tenant-service
+    ports:
+      - "8002:8002"
+    environment:
+      - APP_ENV=dev
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=enterprise_tenant
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKETMQ_NAMESRV=rocketmq-namesrv:9876
+    depends_on:
+      - postgres
+      - redis
+      - rocketmq-namesrv
+    networks:
+      - enterprise-network
+    restart: unless-stopped
+
+  # 飞书服务
+  feishu-service:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.base
+      args:
+        SERVICE_NAME: feishu-service
+        SERVICE_PATH: ./services/feishu-service/cmd/api
+    container_name: enterprise-feishu-service
+    ports:
+      - "8003:8003"
+    environment:
+      - APP_ENV=dev
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKETMQ_NAMESRV=rocketmq-namesrv:9876
+    depends_on:
+      - redis
+      - rocketmq-namesrv
+    networks:
+      - enterprise-network
+    restart: unless-stopped
+
+  # 物流服务
+  logistics-service:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.base
+      args:
+        SERVICE_NAME: logistics-service
+        SERVICE_PATH: ./services/logistics-service/cmd/api
+    container_name: enterprise-logistics-service
+    ports:
+      - "8004:8004"
+    environment:
+      - APP_ENV=dev
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=enterprise_logistics
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKETMQ_NAMESRV=rocketmq-namesrv:9876
+    depends_on:
+      - postgres
+      - redis
+      - rocketmq-namesrv
+    networks:
+      - enterprise-network
+    restart: unless-stopped
+
+  # 餐饮服务
+  catering-service:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.base
+      args:
+        SERVICE_NAME: catering-service
+        SERVICE_PATH: ./services/catering-service/cmd/api
+    container_name: enterprise-catering-service
+    ports:
+      - "8005:8005"
+    environment:
+      - APP_ENV=dev
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=enterprise_catering
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKETMQ_NAMESRV=rocketmq-namesrv:9876
+    depends_on:
+      - postgres
+      - redis
+      - rocketmq-namesrv
+    networks:
+      - enterprise-network
+    restart: unless-stopped
+
+  # 预约服务
+  booking-service:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.base
+      args:
+        SERVICE_NAME: booking-service
+        SERVICE_PATH: ./services/booking-service/cmd/api
+    container_name: enterprise-booking-service
+    ports:
+      - "8006:8006"
+    environment:
+      - APP_ENV=dev
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=enterprise_booking
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROCKETMQ_NAMESRV=rocketmq-namesrv:9876
+    depends_on:
+      - postgres
+      - redis
+      - rocketmq-namesrv
+    networks:
+      - enterprise-network
+    restart: unless-stopped
+
+networks:
+  enterprise-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+
