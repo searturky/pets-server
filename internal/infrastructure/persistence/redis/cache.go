@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 
 	petApp "pets-server/internal/application/pet"
 )
@@ -88,4 +88,3 @@ func (c *CacheService) Exists(ctx context.Context, key string) (bool, error) {
 	n, err := c.client.Exists(ctx, key).Result()
 	return n > 0, err
 }
-

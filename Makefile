@@ -1,26 +1,14 @@
-.PHONY: all build clean test lint docker-build docker-push dev-up dev-down
+.PHONY: env-up env-down up down k8s-deploy k8s-delete k8s-status migrate-up migrate-down
 
 # 变量
 GO := go
 DOCKER := docker
 DOCKER_COMPOSE := $(if $(shell command -v docker-compose 2>/dev/null),docker-compose,docker compose)
-REGISTRY := your-registry/enterprise-platform
+REGISTRY := searturky/pets-server
 VERSION := $(shell git describe --tags --always --dirty)
 
 # 服务列表
 SERVICES := gateway user-service feishu-service logistics-service catering-service booking-service
-
-# 初始化dapr
-dapr-init:
-	dapr init --slim
-	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose-dapr.yml up -d
-
-dapr-uninstall:
-	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose-dapr.yml down
-	dapr uninstall --all
-
-# 默认目标
-all: build
 
 # 构建所有服务
 build:
@@ -85,11 +73,11 @@ docker-push:
 # === 开发环境 ===
 
 # 启动开发环境基础设施
-dev-up:
+env-up:
 	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.dev.yml up -d
 
 # 停止开发环境基础设施
-dev-down:
+env-down:
 	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.dev.yml down
 
 # 启动完整环境
@@ -99,36 +87,6 @@ up:
 # 停止完整环境
 down:
 	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.yml down
-
-# 查看日志
-logs:
-	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.yml logs -f
-
-# === 本地开发 ===
-
-# 运行网关
-run-gateway:
-	$(GO) run ./services/gateway/cmd/main.go
-
-# 运行用户服务
-run-user:
-	$(GO) run ./services/user-service/cmd/api/main.go
-
-# 运行飞书服务
-run-feishu:
-	$(GO) run ./services/feishu-service/cmd/api/main.go
-
-# 运行物流服务
-run-logistics:
-	$(GO) run ./services/logistics-service/cmd/api/main.go
-
-# 运行餐饮服务
-run-catering:
-	$(GO) run ./services/catering-service/cmd/api/main.go
-
-# 运行预约服务
-run-booking:
-	$(GO) run ./services/booking-service/cmd/api/main.go
 
 # === Kubernetes 相关 ===
 
@@ -159,30 +117,4 @@ migrate-down:
 	@echo "Rolling back database migrations..."
 	# TODO: 添加回滚命令
 
-# === 帮助 ===
-
-help:
-	@echo "Enterprise Platform Makefile"
-	@echo ""
-	@echo "Usage:"
-	@echo "  make build          - Build all services"
-	@echo "  make clean          - Clean build artifacts"
-	@echo "  make test           - Run tests"
-	@echo "  make lint           - Run linter"
-	@echo "  make docker-build   - Build Docker images"
-	@echo "  make docker-push    - Push Docker images"
-	@echo "  make dev-up         - Start development infrastructure"
-	@echo "  make dev-down       - Stop development infrastructure"
-	@echo "  make up             - Start full environment"
-	@echo "  make down           - Stop full environment"
-	@echo "  make k8s-deploy     - Deploy to Kubernetes"
-	@echo "  make k8s-delete     - Delete Kubernetes deployment"
-	@echo ""
-	@echo "Run services locally:"
-	@echo "  make run-gateway    - Run API Gateway"
-	@echo "  make run-user       - Run User Service"
-	@echo "  make run-feishu     - Run Feishu Service"
-	@echo "  make run-logistics  - Run Logistics Service"
-	@echo "  make run-catering   - Run Catering Service"
-	@echo "  make run-booking    - Run Booking Service"
 

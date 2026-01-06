@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 
 	"pets-server/internal/application/ranking"
 )
@@ -77,7 +77,7 @@ func (r *RankingStore) UpdateScore(ctx context.Context, rankType string, userID 
 	member := fmt.Sprintf("%d", userID)
 
 	// 使用 ZADD 更新分数
-	return r.client.ZAdd(ctx, key, &redis.Z{
+	return r.client.ZAdd(ctx, key, redis.Z{
 		Score:  float64(score),
 		Member: member,
 	}).Err()
@@ -96,4 +96,3 @@ func (r *RankingStore) GetRankingCount(ctx context.Context, rankType string) (in
 	key := rankingKey(rankType)
 	return r.client.ZCard(ctx, key).Result()
 }
-

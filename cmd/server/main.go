@@ -20,6 +20,9 @@ import (
 	rankingApp "pets-server/internal/application/ranking"
 	socialApp "pets-server/internal/application/social"
 
+	// 领域层
+	"pets-server/internal/domain/shared"
+
 	// 基础设施层
 	"pets-server/internal/infrastructure/cron"
 	"pets-server/internal/infrastructure/external/wechat"
@@ -88,20 +91,47 @@ func main() {
 	}
 
 	// 2.3 消息队列（可选，如果连接失败则使用 Noop 实现）
-	var eventPublisher interface {
-		Publish(ctx context.Context, event interface{ EventName() string }) error
-	}
-	mqPublisher, err := messaging.NewRabbitMQPublisher(messaging.Config{
-		URL:      cfg.MQ.URL,
-		Exchange: cfg.MQ.Exchange,
-		Queue:    cfg.MQ.Queue,
-	})
-	if err != nil {
-		log.Printf("Warning: Failed to connect MQ, using noop publisher: %v", err)
-		eventPublisher = messaging.NewNoopPublisher()
+	var eventPublisher shared.EventPublisher
+	var publisherCloser interface{ Close() error } // 用于关闭连接
+	
+	// 优先使用 NATS JetStream
+	if cfg.MQ.NATSURL != "" {
+		natsPublisher, err := messaging.NewNATSPublisher(messaging.Config{
+			NATSURL:    cfg.MQ.NATSURL,
+			StreamName: cfg.MQ.StreamName,
+		})
+		if err != nil {
+			log.Printf("Warning: Failed to connect NATS, trying Redis Stream: %v", err)
+			// 尝试 Redis Stream 作为备用
+			if cfg.Redis.Host != "" {
+				redisPublisher, err := messaging.NewRedisStreamPublisher(messaging.Config{
+					RedisAddr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+					RedisPassword: cfg.Redis.Password,
+					RedisDB:       cfg.Redis.DB,
+					StreamKey:     "game:events",
+				})
+				if err != nil {
+					log.Printf("Warning: Failed to connect Redis Stream, using noop publisher: %v", err)
+					eventPublisher = messaging.NewNoopPublisher()
+				} else {
+					eventPublisher = redisPublisher
+					publisherCloser = redisPublisher
+				}
+			} else {
+				eventPublisher = messaging.NewNoopPublisher()
+			}
+		} else {
+			eventPublisher = natsPublisher
+			publisherCloser = natsPublisher
+		}
 	} else {
-		eventPublisher = mqPublisher
-		defer mqPublisher.Close()
+		log.Println("MQ not configured, using noop publisher")
+		eventPublisher = messaging.NewNoopPublisher()
+	}
+	
+	// 注册关闭回调
+	if publisherCloser != nil {
+		defer publisherCloser.Close()
 	}
 
 	// 2.4 微信认证服务

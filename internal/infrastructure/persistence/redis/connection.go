@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 // Config Redis 配置
@@ -36,4 +36,3 @@ func NewClient(cfg Config) (*redis.Client, error) {
 	log.Println("Redis connected successfully")
 	return client, nil
 }
-

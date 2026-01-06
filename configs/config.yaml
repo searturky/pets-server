@@ -24,11 +24,15 @@ redis:
   db: 0
   pool_size: 100
 
-# 消息队列配置 (RabbitMQ)
+# 消息队列配置 (NATS JetStream)
+# 如果未配置或连接失败，将自动使用 Noop 实现（仅打印日志）
 mq:
-  url: "amqp://guest:guest@localhost:5672/"
-  exchange: "pets_events"
-  queue: "pets_queue"
+  # NATS 配置（推荐方案）
+  nats_url: "nats://localhost:4222"
+  stream_name: "game-events"  # 可选，默认为 game-events
+  
+  # 备用方案：不配置 nats_url 将尝试使用 Redis Stream
+  # Redis Stream 使用上面 redis 段的配置，无需额外配置
 
 # JWT 配置
 jwt:

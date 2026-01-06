@@ -5,7 +5,7 @@ services:
   # PostgreSQL数据库
   postgres:
     image: postgres:18.1
-    container_name: dev-postgres
+    container_name: pets-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -15,7 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - cosmos
+      - pets
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -25,18 +25,56 @@ services:
   # Redis缓存
   redis:
     image: redis:8.4.0
-    container_name: dev-redis
+    container_name: pets-redis
     ports:
       - "6370:6379"
     volumes:
       - redis_data:/data
     networks:
-      - cosmos
+      - pets
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # NATS JetStream 消息队列（推荐）
+  nats:
+    image: nats:latest
+    container_name: pets-nats
+    command: 
+      - "-js"           # 启用 JetStream
+      - "-m"            # 启用监控
+      - "8222"          # 监控端口
+      - "--store_dir"   # 数据目录
+      - "/data"
+    ports:
+      - "4222:4222"     # NATS 客户端端口
+      - "8222:8222"     # HTTP 监控端口
+    volumes:
+      - nats_data:/data
+    networks:
+      - pets
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # （可选）NATS 监控面板
+  nats-surveyor:
+    image: natsio/nats-surveyor:latest
+    container_name: pets-nats-surveyor
+    depends_on:
+      - nats
+    ports:
+      - "7777:7777"
+    command:
+      - "-s"
+      - "http://nats:8222"
+    networks:
+      - pets
+    restart: unless-stopped
 
   # # RocketMQ NameServer
   # rocketmq-namesrv:
@@ -80,13 +118,10 @@ services:
   #     - cosmos
 
 networks:
-  cosmos:
+  pets:
     driver: bridge
 
 volumes:
   postgres_data:
   redis_data:
-  tempo_data:
-  loki_data:
-  prometheus_data:
-  grafana_data:
+  nats_data:
