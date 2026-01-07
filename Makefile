@@ -1,4 +1,4 @@
-.PHONY: env-up env-down up down k8s-deploy k8s-delete k8s-status migrate-up migrate-down
+.PHONY: build-test build-prod push-test push-prod env-up env-down env-clean k8s-deploy k8s-delete k8s-status migrate-up migrate-down
 
 # 变量
 GO := go
@@ -7,20 +7,26 @@ DOCKER_COMPOSE := $(if $(shell command -v docker-compose 2>/dev/null),docker-com
 REGISTRY := searturky/pets-server
 VERSION := $(shell git describe --tags --always --dirty)
 
-# 服务列表
-SERVICES := gateway user-service feishu-service logistics-service catering-service booking-service
 
-# 构建所有服务
-build:
-	@for service in $(SERVICES); do \
-		echo "Building $$service..."; \
-		$(GO) build -o bin/$$service ./services/$$service/cmd/...; \
-	done
+build-test:
+	docker build -t $(REGISTRY):$(VERSION) -t $(REGISTRY):latest -f deployments/docker/Dockerfile . --target test
+
+build-prod:
+	docker build -t $(REGISTRY):$(VERSION) -t $(REGISTRY):latest -f deployments/docker/Dockerfile . --target prod
+
+# 推送镜像
+push-test:
+	docker push $(REGISTRY):$(VERSION)
+	docker push $(REGISTRY):latest
+
+push-prod:
+	docker push $(REGISTRY):$(VERSION)
+	docker push $(REGISTRY):latest
 
 # 清理构建产物
-clean:
-	rm -rf bin/
-	rm -rf vendor/
+clean-images:
+	docker rmi $(REGISTRY):$(VERSION)
+	docker rmi $(REGISTRY):latest
 
 # 运行测试
 test:
@@ -35,58 +41,34 @@ test-coverage:
 lint:
 	golangci-lint run ./...
 
-# 格式化代码
-fmt:
-	$(GO) fmt ./...
-
 # 下载依赖
-deps:
-	$(GO) mod download
-	$(GO) mod tidy
+install:
+	export GOPROXY=https://goproxy.io,https://goproxy.cn,direct && go mod download && unset GOPROXY
 
 # 生成代码（如protobuf等）
 generate:
 	$(GO) generate ./...
 
-# === Docker 相关 ===
-
-# 构建所有Docker镜像
-docker-build:
-	@for service in $(SERVICES); do \
-		echo "Building Docker image for $$service..."; \
-		$(DOCKER) build \
-			--build-arg SERVICE_NAME=$$service \
-			--build-arg SERVICE_PATH=./services/$$service/cmd \
-			-t $(REGISTRY)/$$service:$(VERSION) \
-			-t $(REGISTRY)/$$service:latest \
-			-f deployments/docker/Dockerfile.base .; \
-	done
-
-# 推送所有Docker镜像
-docker-push:
-	@for service in $(SERVICES); do \
-		echo "Pushing Docker image for $$service..."; \
-		$(DOCKER) push $(REGISTRY)/$$service:$(VERSION); \
-		$(DOCKER) push $(REGISTRY)/$$service:latest; \
-	done
-
 # === 开发环境 ===
 
 # 启动开发环境基础设施
 env-up:
-	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.dev.yml up -d
+	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose-basic.yml up -d
 
 # 停止开发环境基础设施
 env-down:
-	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.dev.yml down
+	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose-basic.yml down
 
-# 启动完整环境
-up:
-	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.yml up -d
-
-# 停止完整环境
-down:
-	$(DOCKER_COMPOSE) -f deployments/docker/docker-compose.yml down
+# 停止环境并删除所有卷数据（危险操作，会删除数据库数据）
+env-clean:
+	@echo -n "⚠️ 确认删除所有卷数据? [y/N] "; \
+	read REPLY; \
+	if [ "$$REPLY" = "y" ] || [ "$$REPLY" = "Y" ]; then \
+		$(DOCKER_COMPOSE) -f deployments/docker/docker-compose-basic.yml down -v; \
+		echo "✅ 环境已停止，所有卷数据已删除"; \
+	else \
+		echo "❌ 操作已取消"; \
+	fi
 
 # === Kubernetes 相关 ===
 

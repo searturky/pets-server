@@ -5,17 +5,16 @@ services:
   # PostgreSQL数据库
   postgres:
     image: postgres:18.1
-    container_name: pets-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql
+      # - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - pets
+      - pets_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -25,13 +24,12 @@ services:
   # Redis缓存
   redis:
     image: redis:8.4.0
-    container_name: pets-redis
     ports:
       - "6370:6379"
     volumes:
       - redis_data:/data
     networks:
-      - pets
+      - pets_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -41,7 +39,6 @@ services:
   # NATS JetStream 消息队列（推荐）
   nats:
     image: nats:latest
-    container_name: pets-nats
     command: 
       - "-js"           # 启用 JetStream
       - "-m"            # 启用监控
@@ -54,27 +51,23 @@ services:
     volumes:
       - nats_data:/data
     networks:
-      - pets
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8222/healthz || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - pets_network
 
-  # （可选）NATS 监控面板
-  nats-surveyor:
-    image: natsio/nats-surveyor:latest
-    container_name: pets-nats-surveyor
-    depends_on:
-      - nats
-    ports:
-      - "7777:7777"
-    command:
-      - "-s"
-      - "http://nats:8222"
-    networks:
-      - pets
-    restart: unless-stopped
+  # （可选）NATS 监控面板（ Prometheus + Grafana）
+  # nats-surveyor:
+  #   image: natsio/nats-surveyor:latest
+  #   depends_on:
+  #     - nats
+  #   ports:
+  #     - "7777:7777"
+  #   command:
+  #     - "-s"
+  #     - "nats://nats:4222"
+  #     - "--timeout"
+  #     - "10s"
+  #   networks:
+  #     - pets_network
+  #   restart: unless-stopped
 
   # # RocketMQ NameServer
   # rocketmq-namesrv:
@@ -118,7 +111,7 @@ services:
   #     - cosmos
 
 networks:
-  pets:
+  pets_network:
     driver: bridge
 
 volumes:
