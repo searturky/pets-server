@@ -1,4 +1,4 @@
-FROM golang:alpine3.20 AS builder-dev
+FROM golang:1.26-rc-alpine3.23 AS builder-dev
 WORKDIR /build
 COPY go.mod go.sum ./
 COPY ./cmd ./cmd
@@ -12,7 +12,7 @@ RUN go env -w GOPROXY=https://goproxy.cn,direct && \
     CGO_ENABLED=0 GOOS=linux go build -o ./dist/pets ./cmd/server/main.go
 
     
-FROM golang:alpine3.20 AS builder-prod
+FROM golang:1.26-rc-alpine3.23 AS builder-prod
 WORKDIR /build
 COPY go.mod go.sum ./
 COPY ./cmd ./cmd
@@ -25,7 +25,7 @@ RUN rm -rf ./app/docs && \
 
 FROM alpine:3.20 AS test
 COPY --from=builder-dev /build/dist /app
-COPY ./config/settings.dev.yaml ./app/settings.yaml
+COPY ./configs/settings.test.yaml ./app/settings.yaml
 RUN apk add tzdata && \
     ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone
@@ -35,7 +35,7 @@ CMD ["./pets"]
 
 FROM alpine:3.20 AS prod
 COPY --from=builder-prod /build/dist /app
-COPY ./config/settings.prod.yaml ./app/settings.yaml
+COPY ./configs/settings.prod.yaml ./app/settings.yaml
 RUN apk add tzdata && \
     ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone
