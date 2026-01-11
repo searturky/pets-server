@@ -18,6 +18,15 @@ const (
 	StageElderly Stage = 4 // 老年期
 )
 
+// StageName 获取阶段名称
+func (s Stage) Name() string {
+	names := []string{"蛋", "幼年期", "成长期", "成熟期", "老年期"}
+	if int(s) < len(names) {
+		return names[s]
+	}
+	return "未知"
+}
+
 // FoodType 食物类型
 type FoodType int
 
@@ -47,11 +56,16 @@ type Pet struct {
 	UserID int64
 	Name   string
 
+	// 物种和性别
+	SpeciesID SpeciesID // 物种ID
+	Gender    Gender    // 性别
+
 	// 基因与衍生属性
-	Gene        Gene
-	Appearance  Appearance
-	Personality Personality
-	Skill       Skill
+	Gene              Gene             // 基因
+	Appearance        Appearance       // 通用外观
+	SpecialAppearance SpecialAppearance // 物种特有外观
+	Personality       Personality      // 性格
+	Skill             Skill            // 技能
 
 	// 成长状态
 	Stage Stage
@@ -63,6 +77,12 @@ type Pet struct {
 	Happiness   int
 	Cleanliness int
 	Energy      int
+
+	// 繁衍相关
+	Parent1ID   *int64     // 父方ID (可为空)
+	Parent2ID   *int64     // 母方ID (可为空)
+	Generation  int        // 代数
+	LastBreedAt *time.Time // 上次繁殖时间
 
 	// 时间记录
 	LastFedAt     time.Time
@@ -76,27 +96,79 @@ type Pet struct {
 }
 
 // NewPet 创建新宠物（从蛋开始）
+// 使用默认物种（猫）
 func NewPet(userID int64, name string) *Pet {
+	return NewPetWithSpecies(userID, name, SpeciesCat, nil)
+}
+
+// NewPetWithSpecies 创建指定物种的新宠物
+func NewPetWithSpecies(userID int64, name string, speciesID SpeciesID, genderRule *GenderRule) *Pet {
 	gene := GenerateGene()
 	now := time.Now()
 
-	return &Pet{
-		UserID:      userID,
-		Name:        name,
-		Gene:        gene,
-		Appearance:  NewAppearanceFromGene(gene),
-		Personality: NewPersonalityFromGene(gene),
-		Skill:       NewSkillFromGene(gene),
-		Stage:       StageEgg,
-		Exp:         0,
-		Level:       1,
-		Hunger:      50,
-		Happiness:   50,
-		Cleanliness: 50,
-		Energy:      100,
-		BornAt:      now,
-		CreatedAt:   now,
+	// 确定性别
+	var gender Gender
+	if genderRule != nil {
+		gender = DetermineGender(gene, *genderRule)
+	} else {
+		gender = DetermineGender(gene, DefaultGenderRule())
 	}
+
+	return &Pet{
+		UserID:            userID,
+		Name:              name,
+		SpeciesID:         speciesID,
+		Gender:            gender,
+		Gene:              gene,
+		Appearance:        NewAppearanceFromGene(gene),
+		SpecialAppearance: NewSpecialAppearance(), // 由物种解释器填充
+		Personality:       NewPersonalityFromGene(gene),
+		Skill:             NewSkillFromGene(gene),
+		Stage:             StageEgg,
+		Exp:               0,
+		Level:             1,
+		Hunger:            50,
+		Happiness:         50,
+		Cleanliness:       50,
+		Energy:            100,
+		Generation:        0,
+		BornAt:            now,
+		CreatedAt:         now,
+	}
+}
+
+// NewPetFromBreeding 从繁殖创建新宠物
+func NewPetFromBreeding(userID int64, name string, speciesID SpeciesID, gene Gene, gender Gender, parent1ID, parent2ID int64, generation int) *Pet {
+	now := time.Now()
+
+	return &Pet{
+		UserID:            userID,
+		Name:              name,
+		SpeciesID:         speciesID,
+		Gender:            gender,
+		Gene:              gene,
+		Appearance:        NewAppearanceFromGene(gene),
+		SpecialAppearance: NewSpecialAppearance(),
+		Personality:       NewPersonalityFromGene(gene),
+		Skill:             NewSkillFromGene(gene),
+		Stage:             StageEgg,
+		Exp:               0,
+		Level:             1,
+		Hunger:            50,
+		Happiness:         50,
+		Cleanliness:       50,
+		Energy:            100,
+		Parent1ID:         &parent1ID,
+		Parent2ID:         &parent2ID,
+		Generation:        generation,
+		BornAt:            now,
+		CreatedAt:         now,
+	}
+}
+
+// SetSpecialAppearance 设置物种特有外观（由物种解释器调用）
+func (p *Pet) SetSpecialAppearance(special SpecialAppearance) {
+	p.SpecialAppearance = special
 }
 
 // --- 核心业务方法 ---
@@ -124,8 +196,8 @@ func (p *Pet) Feed(foodType FoodType) error {
 	}
 
 	// 更新状态
-	p.Hunger = min(p.Hunger+restore, 100)
-	p.Happiness = min(p.Happiness+5, 100)
+	p.Hunger = minInt(p.Hunger+restore, 100)
+	p.Happiness = minInt(p.Happiness+5, 100)
 	p.LastFedAt = time.Now()
 
 	// 获得经验
@@ -134,9 +206,9 @@ func (p *Pet) Feed(foodType FoodType) error {
 
 	// 记录事件
 	p.addEvent(PetFedEvent{
-		PetID:    p.ID,
-		UserID:   p.UserID,
-		FoodType: int(foodType),
+		PetID:     p.ID,
+		UserID:    p.UserID,
+		FoodType:  int(foodType),
 		ExpGained: exp,
 	})
 
@@ -165,8 +237,8 @@ func (p *Pet) Play() error {
 	}
 
 	// 更新状态
-	p.Happiness = min(p.Happiness+restore, 100)
-	p.Energy = max(p.Energy-15, 0)
+	p.Happiness = minInt(p.Happiness+restore, 100)
+	p.Energy = maxInt(p.Energy-15, 0)
 	p.LastPlayedAt = time.Now()
 
 	// 获得经验
@@ -190,7 +262,7 @@ func (p *Pet) Clean() error {
 		restore = int(float64(restore) * p.Skill.EffectMultiplier())
 	}
 
-	p.Cleanliness = min(p.Cleanliness+restore, 100)
+	p.Cleanliness = minInt(p.Cleanliness+restore, 100)
 	p.LastCleanedAt = time.Now()
 
 	// 清洁也给少量经验
@@ -201,7 +273,46 @@ func (p *Pet) Clean() error {
 
 // Rest 休息恢复能量
 func (p *Pet) Rest() {
-	p.Energy = min(p.Energy+30, 100)
+	p.Energy = minInt(p.Energy+30, 100)
+}
+
+// --- 繁殖相关 ---
+
+// CanBreed 检查是否可以繁殖
+func (p *Pet) CanBreed(breedRules BreedingRules) error {
+	if p.Stage < breedRules.MinStage {
+		return ErrPetNotMature
+	}
+	if p.Level < breedRules.MinLevel {
+		return ErrPetLevelTooLow
+	}
+	if p.Happiness < breedRules.MinHappiness {
+		return ErrPetUnhappy
+	}
+	if p.LastBreedAt != nil {
+		cooldown := time.Duration(breedRules.CooldownHours) * time.Hour
+		if p.Gender == GenderNone {
+			cooldown = time.Duration(breedRules.SelfBreedCooldownHours) * time.Hour
+		}
+		if time.Since(*p.LastBreedAt) < cooldown {
+			return ErrBreedCooldown
+		}
+	}
+	return nil
+}
+
+// CanBreedWith 检查是否可以与另一只宠物繁殖
+func (p *Pet) CanBreedWith(other *Pet) error {
+	if !CanBreedWith(p.Gender, other.Gender) {
+		return ErrIncompatibleGender
+	}
+	return nil
+}
+
+// MarkBred 标记已繁殖
+func (p *Pet) MarkBred() {
+	now := time.Now()
+	p.LastBreedAt = &now
 }
 
 // --- 状态衰减（由定时任务调用） ---
@@ -222,18 +333,18 @@ func (p *Pet) DecayStatus(hours float64) {
 
 	// 饥饿衰减
 	hungerDecay := int(baseDecay * p.Personality.HungerDecayRate() * hours)
-	p.Hunger = max(p.Hunger-hungerDecay, 0)
+	p.Hunger = maxInt(p.Hunger-hungerDecay, 0)
 
 	// 快乐衰减
 	happinessDecay := int(baseDecay * p.Personality.HappinessDecayRate() * hours)
-	p.Happiness = max(p.Happiness-happinessDecay, 0)
+	p.Happiness = maxInt(p.Happiness-happinessDecay, 0)
 
 	// 清洁衰减
 	cleanlinessDecay := int(baseDecay * hours)
-	p.Cleanliness = max(p.Cleanliness-cleanlinessDecay, 0)
+	p.Cleanliness = maxInt(p.Cleanliness-cleanlinessDecay, 0)
 
 	// 能量恢复（休息时）
-	p.Energy = min(p.Energy+int(10*hours), 100)
+	p.Energy = minInt(p.Energy+int(10*hours), 100)
 }
 
 // --- 成长与进化 ---
@@ -327,11 +438,12 @@ func (p *Pet) IsTired() bool {
 
 // StageName 阶段名称
 func (p *Pet) StageName() string {
-	names := []string{"蛋", "幼年期", "成长期", "成熟期", "老年期"}
-	if int(p.Stage) < len(names) {
-		return names[p.Stage]
-	}
-	return "未知"
+	return p.Stage.Name()
+}
+
+// GenderName 性别名称
+func (p *Pet) GenderName() string {
+	return p.Gender.Name()
 }
 
 // --- 领域事件 ---
@@ -347,28 +459,19 @@ func (p *Pet) Events() []any {
 	return events
 }
 
-// 辅助函数
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // 领域错误
 var (
-	ErrPetIsEgg    = errors.New("宠物还在蛋里")
-	ErrPetIsFull   = errors.New("宠物已经很饱了")
-	ErrPetIsHappy  = errors.New("宠物已经很开心了")
-	ErrPetIsClean  = errors.New("宠物已经很干净了")
-	ErrPetIsTired  = errors.New("宠物太累了需要休息")
-	ErrPetNotFound = errors.New("宠物不存在")
+	ErrPetIsEgg            = errors.New("宠物还在蛋里")
+	ErrPetIsFull           = errors.New("宠物已经很饱了")
+	ErrPetIsHappy          = errors.New("宠物已经很开心了")
+	ErrPetIsClean          = errors.New("宠物已经很干净了")
+	ErrPetIsTired          = errors.New("宠物太累了需要休息")
+	ErrPetNotFound         = errors.New("宠物不存在")
+	ErrPetNotMature        = errors.New("宠物还未成年")
+	ErrPetLevelTooLow      = errors.New("宠物等级不足")
+	ErrPetUnhappy          = errors.New("宠物不够开心")
+	ErrBreedCooldown       = errors.New("繁殖冷却中")
+	ErrIncompatibleGender  = errors.New("性别不兼容")
+	ErrCannotSelfBreed     = errors.New("该物种不能自我繁殖")
+	ErrSpeciesNotFound     = errors.New("物种不存在")
 )
-
