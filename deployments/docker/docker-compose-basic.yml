@@ -5,14 +5,16 @@ services:
   # PostgreSQL数据库
   postgres:
     image: postgres:18.1
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
       # - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      TZ: "Asia/Shanghai"
+      POSTGRES_USER: pets
+      POSTGRES_PASSWORD: pets123
+      POSTGRES_DB: pets
     networks:
       - pets_network
     healthcheck:
@@ -38,7 +40,7 @@ services:
 
   # NATS JetStream 消息队列（推荐）
   nats:
-    image: nats:latest
+    image: nats:2.12.3
     command: 
       - "-js"           # 启用 JetStream
       - "-m"            # 启用监控
@@ -46,8 +48,8 @@ services:
       - "--store_dir"   # 数据目录
       - "/data"
     ports:
-      - "4222:4222"     # NATS 客户端端口
-      - "8222:8222"     # HTTP 监控端口
+      - "4223:4222"     # NATS 客户端端口
+      - "8223:8222"     # HTTP 监控端口
     volumes:
       - nats_data:/data
     networks:
@@ -62,7 +64,7 @@ services:
   #     - "7777:7777"
   #   command:
   #     - "-s"
-  #     - "nats://nats:4222"
+  #     - "nats://nats:4223"
   #     - "--timeout"
   #     - "10s"
   #   networks:

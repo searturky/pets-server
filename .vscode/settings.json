@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5434,
+            "driver": "PostgreSQL",
+            "name": "fuge-dev",
+            "database": "fuge",
+            "username": "fuge",
+            "password": "fuge123"
+        }
+    ],
+    "gopls": {
+        "ui.diagnostic.analyses": {
+            "QF1003": false
+        }
+    }
+}

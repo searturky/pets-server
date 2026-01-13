@@ -4,7 +4,8 @@ package pet
 
 // CreatePetRequest 创建宠物请求
 type CreatePetRequest struct {
-	Name string `json:"name" binding:"required,min=1,max=20"` // 宠物名称
+	Name      string `json:"name" binding:"required,min=1,max=20"` // 宠物名称
+	SpeciesID string `json:"speciesId,omitempty"`                  // 物种ID（可选，不填则随机）
 }
 
 // CreatePetResponse 创建宠物响应
@@ -110,5 +111,85 @@ type PetSimpleDTO struct {
 	Level     int    `json:"level"`
 	Stage     string `json:"stage"`
 	OwnerName string `json:"ownerName,omitempty"`
+}
+
+// --- 繁殖相关 DTO ---
+
+// BreedPetsRequest 繁殖请求
+type BreedPetsRequest struct {
+	Parent1ID int64  `json:"parent1Id" binding:"required"` // 父母1 ID
+	Parent2ID int64  `json:"parent2Id"`                    // 父母2 ID（可选，不填为分裂繁殖）
+	ChildName string `json:"childName" binding:"required"` // 后代名称
+}
+
+// BreedPetsResponse 繁殖响应
+type BreedPetsResponse struct {
+	Offspring      PetDetailDTO          `json:"offspring"`      // 后代
+	InheritedGenes []string              `json:"inheritedGenes"` // 继承的基因特征
+	Mutations      []string              `json:"mutations"`      // 发生的变异
+	Parent1Updated PetBreedingStatusDTO  `json:"parent1Updated"` // 父母1更新后状态
+	Parent2Updated *PetBreedingStatusDTO `json:"parent2Updated"` // 父母2更新后状态（分裂繁殖时为nil）
+}
+
+// PetBreedingStatusDTO 宠物繁殖状态
+type PetBreedingStatusDTO struct {
+	ID              int64 `json:"id"`
+	BreedingCount   int   `json:"breedingCount"`   // 繁殖次数
+	RemainingBreeds int   `json:"remainingBreeds"` // 剩余可繁殖次数
+}
+
+// CanBreedResponse 是否可繁殖响应
+type CanBreedResponse struct {
+	CanBreed bool   `json:"canBreed"`
+	Reason   string `json:"reason,omitempty"` // 不能繁殖的原因
+}
+
+// PredictOffspringRequest 预测后代请求
+type PredictOffspringRequest struct {
+	Parent1ID int64 `json:"parent1Id" binding:"required"`
+	Parent2ID int64 `json:"parent2Id"`
+}
+
+// SpeciesProbabilityDTO 物种概率
+type SpeciesProbabilityDTO struct {
+	SpeciesID   string  `json:"speciesId"`
+	SpeciesName string  `json:"speciesName"`
+	Probability float64 `json:"probability"` // 0-1
+}
+
+// PredictOffspringResponse 预测后代响应
+type PredictOffspringResponse struct {
+	PossibleSpecies []SpeciesProbabilityDTO `json:"possibleSpecies"`
+}
+
+// --- 物种相关 DTO ---
+
+// SpeciesDTO 物种信息
+type SpeciesDTO struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	Rarity   int    `json:"rarity"`
+}
+
+// GetSpeciesListResponse 物种列表响应
+type GetSpeciesListResponse struct {
+	Species []SpeciesDTO `json:"species"`
+}
+
+// GetPetScoreResponse 宠物评分响应
+type GetPetScoreResponse struct {
+	Score       int            `json:"score"`
+	Breakdown   ScoreBreakdown `json:"breakdown"`
+}
+
+// ScoreBreakdown 评分明细
+type ScoreBreakdown struct {
+	LevelScore   int `json:"levelScore"`
+	SkillScore   int `json:"skillScore"`
+	RarityScore  int `json:"rarityScore"`
+	StatusScore  int `json:"statusScore"`
+	StageScore   int `json:"stageScore"`
+	GenerationScore int `json:"generationScore"`
 }
 

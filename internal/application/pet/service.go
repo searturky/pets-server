@@ -6,6 +6,7 @@ package pet
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"pets-server/internal/domain/item"
@@ -15,11 +16,12 @@ import (
 
 // Service 宠物应用服务
 type Service struct {
-	petRepo   pet.Repository
-	itemRepo  item.Repository
-	uow       shared.UnitOfWork
-	publisher shared.EventPublisher
-	cache     CacheService // 缓存服务接口
+	petRepo      pet.Repository
+	itemRepo     item.Repository
+	petDomainSvc *pet.DomainService // 领域服务
+	uow          shared.UnitOfWork
+	publisher    shared.EventPublisher
+	cache        CacheService // 缓存服务接口
 }
 
 // CacheService 缓存服务接口（在应用层定义，基础设施层实现）
@@ -33,16 +35,18 @@ type CacheService interface {
 func NewService(
 	petRepo pet.Repository,
 	itemRepo item.Repository,
+	petDomainSvc *pet.DomainService,
 	uow shared.UnitOfWork,
 	publisher shared.EventPublisher,
 	cache CacheService,
 ) *Service {
 	return &Service{
-		petRepo:   petRepo,
-		itemRepo:  itemRepo,
-		uow:       uow,
-		publisher: publisher,
-		cache:     cache,
+		petRepo:      petRepo,
+		itemRepo:     itemRepo,
+		petDomainSvc: petDomainSvc,
+		uow:          uow,
+		publisher:    publisher,
+		cache:        cache,
 	}
 }
 
@@ -200,17 +204,24 @@ func (s *Service) CreatePet(ctx context.Context, userID int64, req CreatePetRequ
 	var dto *PetDetailDTO
 
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
-		// 检查用户是否已有宠物
-		existing, err := s.petRepo.FindByUserID(txCtx, userID)
-		if err != nil && !errors.Is(err, pet.ErrPetNotFound) {
-			return err
-		}
-		if existing != nil {
-			return ErrAlreadyHasPet
-		}
 
-		// 创建新宠物（随机基因）
-		p := pet.NewPet(userID, req.Name)
+		// 使用领域服务创建宠物
+		var p *pet.Pet
+		var err error
+		if req.SpeciesID != "" {
+			// 指定物种创建，解析物种ID
+			speciesIDInt, parseErr := strconv.Atoi(req.SpeciesID)
+			if parseErr != nil {
+				return ErrInvalidSpeciesID
+			}
+			p, err = s.petDomainSvc.CreatePet(userID, req.Name, pet.SpeciesID(speciesIDInt))
+			if err != nil {
+				return err
+			}
+		} else {
+			// 随机物种创建
+			p = s.petDomainSvc.CreateRandomPet(userID, req.Name)
+		}
 
 		// 保存
 		if err := s.petRepo.Save(txCtx, p); err != nil {
@@ -350,10 +361,240 @@ func (s *Service) toPetDetailDTO(p *pet.Pet) *PetDetailDTO {
 	}
 }
 
+// ============================================================
+// 繁殖相关方法
+// ============================================================
+
+// BreedPets 繁殖宠物
+func (s *Service) BreedPets(ctx context.Context, userID int64, req BreedPetsRequest) (*BreedPetsResponse, error) {
+	var response *BreedPetsResponse
+	var events []any
+
+	err := s.uow.Do(ctx, func(txCtx context.Context) error {
+		// 1. 获取父母1
+		parent1, err := s.petRepo.FindByID(txCtx, req.Parent1ID)
+		if err != nil {
+			return err
+		}
+		// 验证所有权
+		if parent1.UserID != userID {
+			return ErrNotPetOwner
+		}
+
+		var parent2 *pet.Pet
+		var result *pet.BreedingResult
+
+		if req.Parent2ID > 0 {
+			// 2. 双亲繁殖
+			parent2, err = s.petRepo.FindByID(txCtx, req.Parent2ID)
+			if err != nil {
+				return err
+			}
+			// 验证所有权
+			if parent2.UserID != userID {
+				return ErrNotPetOwner
+			}
+
+			// 3. 委托领域服务执行繁殖
+			result, err = s.petDomainSvc.BreedPets(parent1, parent2, req.ChildName, userID)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 分裂繁殖
+			result, err = s.petDomainSvc.SelfBreedPet(parent1, req.ChildName, userID)
+			if err != nil {
+				return err
+			}
+		}
+
+		// 4. 保存后代
+		if err := s.petRepo.Save(txCtx, result.Child); err != nil {
+			return err
+		}
+
+		// 5. 保存父母（繁殖时间已更新）
+		if err := s.petRepo.Save(txCtx, parent1); err != nil {
+			return err
+		}
+		if parent2 != nil {
+			if err := s.petRepo.Save(txCtx, parent2); err != nil {
+				return err
+			}
+		}
+
+		// 6. 收集事件
+		events = append(events, result.Child.Events()...)
+
+		// 7. 构建响应
+		inheritedGenes := []string{}
+		mutations := []string{}
+		if result.IsHidden {
+			mutations = append(mutations, "触发隐藏物种融合")
+		}
+
+		response = &BreedPetsResponse{
+			Offspring:      *s.toPetDetailDTO(result.Child),
+			InheritedGenes: inheritedGenes,
+			Mutations:      mutations,
+			Parent1Updated: PetBreedingStatusDTO{
+				ID: parent1.ID,
+			},
+		}
+		if parent2 != nil {
+			response.Parent2Updated = &PetBreedingStatusDTO{
+				ID: parent2.ID,
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 清除缓存
+	if s.cache != nil {
+		_ = s.cache.DeletePetDetail(ctx, userID)
+	}
+
+	// 发布事件
+	if s.publisher != nil && len(events) > 0 {
+		for _, event := range events {
+			if e, ok := event.(shared.Event); ok {
+				_ = s.publisher.Publish(ctx, e)
+			}
+		}
+	}
+
+	return response, nil
+}
+
+// CanBreed 检查是否可以繁殖
+func (s *Service) CanBreed(ctx context.Context, userID int64, parent1ID, parent2ID int64) (*CanBreedResponse, error) {
+	parent1, err := s.petRepo.FindByID(ctx, parent1ID)
+	if err != nil {
+		return nil, err
+	}
+	if parent1.UserID != userID {
+		return &CanBreedResponse{CanBreed: false, Reason: "非宠物主人"}, nil
+	}
+
+	if parent2ID > 0 {
+		parent2, err := s.petRepo.FindByID(ctx, parent2ID)
+		if err != nil {
+			return nil, err
+		}
+		if parent2.UserID != userID {
+			return &CanBreedResponse{CanBreed: false, Reason: "非宠物主人"}, nil
+		}
+
+		// 委托领域服务检查
+		if err := s.petDomainSvc.CanBreedPair(parent1, parent2); err != nil {
+			return &CanBreedResponse{CanBreed: false, Reason: err.Error()}, nil
+		}
+	} else {
+		// 检查分裂繁殖
+		if err := s.petDomainSvc.CanSelfBreed(parent1); err != nil {
+			return &CanBreedResponse{CanBreed: false, Reason: err.Error()}, nil
+		}
+	}
+
+	return &CanBreedResponse{CanBreed: true}, nil
+}
+
+// PredictOffspring 预测后代物种
+func (s *Service) PredictOffspring(ctx context.Context, req PredictOffspringRequest) (*PredictOffspringResponse, error) {
+	parent1, err := s.petRepo.FindByID(ctx, req.Parent1ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var parent2 *pet.Pet
+	if req.Parent2ID > 0 {
+		parent2, err = s.petRepo.FindByID(ctx, req.Parent2ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 委托领域服务预测
+	predictions := s.petDomainSvc.PredictOffspringSpecies(parent1, parent2)
+
+	// 转换为 DTO
+	result := make([]SpeciesProbabilityDTO, 0, len(predictions))
+	for _, p := range predictions {
+		species, ok := s.petDomainSvc.GetSpecies(p.SpeciesID)
+		name := strconv.Itoa(int(p.SpeciesID))
+		if ok {
+			name = species.Name
+		}
+		result = append(result, SpeciesProbabilityDTO{
+			SpeciesID:   strconv.Itoa(int(p.SpeciesID)),
+			SpeciesName: name,
+			Probability: float64(p.Probability) / 100.0, // 转换为 0-1 范围
+		})
+	}
+
+	return &PredictOffspringResponse{PossibleSpecies: result}, nil
+}
+
+// ============================================================
+// 评分和物种相关方法
+// ============================================================
+
+// GetPetScore 获取宠物评分
+func (s *Service) GetPetScore(ctx context.Context, userID int64) (*GetPetScoreResponse, error) {
+	p, err := s.petRepo.FindByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 委托领域服务计算评分
+	score := s.petDomainSvc.CalculatePetScore(p)
+
+	// 获取物种稀有度
+	rarityScore := 0
+	if species, ok := s.petDomainSvc.GetSpecies(p.SpeciesID); ok {
+		rarityScore = species.Rarity * 100
+	}
+
+	return &GetPetScoreResponse{
+		Score: score,
+		Breakdown: ScoreBreakdown{
+			LevelScore:      p.Level * 10,
+			SkillScore:      p.Skill.Strength * 50,
+			RarityScore:     rarityScore,
+			StatusScore:     (p.Hunger + p.Happiness + p.Cleanliness) / 3,
+			StageScore:      int(p.Stage) * 100,
+			GenerationScore: p.Generation * 20,
+		},
+	}, nil
+}
+
+// GetAvailableSpecies 获取可用物种列表
+func (s *Service) GetAvailableSpecies(ctx context.Context) (*GetSpeciesListResponse, error) {
+	species := s.petDomainSvc.GetAvailableSpecies()
+
+	result := make([]SpeciesDTO, 0, len(species))
+	for _, sp := range species {
+		result = append(result, SpeciesDTO{
+			ID:       strconv.Itoa(int(sp.ID)),
+			Name:     sp.Name,
+			Category: sp.Category.Name(),
+			Rarity:   sp.Rarity,
+		})
+	}
+
+	return &GetSpeciesListResponse{Species: result}, nil
+}
+
 // 应用层错误
 var (
-	ErrPetNotFound     = errors.New("宠物不存在")
-	ErrAlreadyHasPet   = errors.New("已经拥有宠物了")
-	ErrInvalidFoodItem = errors.New("无效的食物道具")
+	ErrPetNotFound      = errors.New("宠物不存在")
+	ErrAlreadyHasPet    = errors.New("已经拥有宠物了")
+	ErrInvalidFoodItem  = errors.New("无效的食物道具")
+	ErrNotPetOwner      = errors.New("非宠物主人")
+	ErrInvalidSpeciesID = errors.New("无效的物种ID")
 )
-

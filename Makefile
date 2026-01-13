@@ -43,7 +43,11 @@ lint:
 
 # 下载依赖
 install:
-	export GOPROXY=https://goproxy.io,https://goproxy.cn,direct && go mod download && unset GOPROXY
+	export GOPROXY=https://goproxy.io,https://goproxy.cn,direct && go mod download && go install tool && unset GOPROXY
+
+# 生成wire依赖注入代码
+wire:
+	go tool wire ./cmd/server/...
 
 # 生成代码（如protobuf等）
 generate:

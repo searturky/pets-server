@@ -51,7 +51,7 @@ type MQConfig struct {
 	// NATS 配置（推荐）
 	NATSURL    string `mapstructure:"nats_url"`    // nats://localhost:4222
 	StreamName string `mapstructure:"stream_name"` // 默认: game-events
-	
+
 	// Redis Stream 配置（备用方案，使用 Redis 配置段）
 	// 留空表示不使用
 }
@@ -100,4 +100,3 @@ func MustLoad(configPath string) *Config {
 	}
 	return cfg
 }
-

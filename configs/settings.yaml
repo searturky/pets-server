@@ -8,10 +8,10 @@ server:
 # PostgreSQL 数据库配置
 postgres:
   host: "localhost"
-  port: 5432
-  user: "postgres"
-  password: "postgres"
-  dbname: "pets_game"
+  port: 5435
+  user: "pets"
+  password: "pets123"
+  dbname: "pets"
   sslmode: "disable"
   max_open_conns: 100
   max_idle_conns: 10
@@ -19,7 +19,7 @@ postgres:
 # Redis 配置
 redis:
   host: "localhost"
-  port: 6379
+  port: 6370
   password: ""
   db: 0
   pool_size: 100
@@ -28,7 +28,7 @@ redis:
 # 如果未配置或连接失败，将自动使用 Noop 实现（仅打印日志）
 mq:
   # NATS 配置（推荐方案）
-  nats_url: "nats://localhost:4222"
+  nats_url: "nats://localhost:4223"
   stream_name: "game-events"  # 可选，默认为 game-events
   
   # 备用方案：不配置 nats_url 将尝试使用 Redis Stream
@@ -36,7 +36,7 @@ mq:
 
 # JWT 配置
 jwt:
-  secret: "your-secret-key-change-in-production"
+  secret: "h8OBgAPxwEPZY1jV1v1KQDi15N7kw/ngeNKmOs2fPKw8nwME4S1BfIk8zRnokZIP1FpPGVE8juJjCOatbNxmyw=="
   expire_hours: 72
 
 # 微信小游戏配置
