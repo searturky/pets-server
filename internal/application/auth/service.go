@@ -9,6 +9,8 @@ import (
 
 	"pets-server/internal/domain/shared"
 	"pets-server/internal/domain/user"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Service 认证应用服务
@@ -92,6 +94,92 @@ func (s *Service) WxLogin(ctx context.Context, req WxLoginRequest) (*WxLoginResp
 	}, nil
 }
 
+// Login 账号密码登录
+func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, error) {
+	// 1. 根据用户名查找用户
+	u, err := s.userRepo.FindByUsername(ctx, req.Username)
+	if err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			return nil, errors.New("用户名或密码错误")
+		}
+		return nil, err
+	}
+
+	// 2. 验证密码
+	if err := u.VerifyPassword(req.Password); err != nil {
+		return nil, errors.New("用户名或密码错误")
+	}
+
+	// 3. 更新登录时间
+	err = s.uow.Do(ctx, func(txCtx context.Context) error {
+		u.UpdateLogin()
+		return s.userRepo.Save(txCtx, u)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. 生成 JWT Token
+	token, err := s.generateToken(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResponse{
+		Token: token,
+		UserInfo: UserInfo{
+			ID:        u.ID,
+			Nickname:  u.Nickname,
+			AvatarURL: u.AvatarURL,
+			Coins:     u.Coins,
+			Diamonds:  u.Diamonds,
+		},
+	}, nil
+}
+
+// Register 账号注册
+func (s *Service) Register(ctx context.Context, req RegisterRequest) (*LoginResponse, error) {
+	// 1. 检查用户名是否已存在
+	existing, err := s.userRepo.FindByUsername(ctx, req.Username)
+	if err != nil && !errors.Is(err, user.ErrUserNotFound) {
+		return nil, err
+	}
+	if existing != nil {
+		return nil, errors.New("用户名已存在")
+	}
+
+	// 2. 创建新用户
+	u, err := user.NewUserWithPassword(req.Username, req.Password, req.Nickname)
+	if err != nil {
+		return nil, errors.New("创建用户失败: " + err.Error())
+	}
+
+	// 3. 保存用户
+	err = s.uow.Do(ctx, func(txCtx context.Context) error {
+		return s.userRepo.Save(txCtx, u)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. 生成 JWT Token
+	token, err := s.generateToken(u.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResponse{
+		Token: token,
+		UserInfo: UserInfo{
+			ID:        u.ID,
+			Nickname:  u.Nickname,
+			AvatarURL: u.AvatarURL,
+			Coins:     u.Coins,
+			Diamonds:  u.Diamonds,
+		},
+	}, nil
+}
+
 // GetUserInfo 获取用户信息
 func (s *Service) GetUserInfo(ctx context.Context, userID int64) (*UserInfo, error) {
 	u, err := s.userRepo.FindByID(ctx, userID)
@@ -110,9 +198,25 @@ func (s *Service) GetUserInfo(ctx context.Context, userID int64) (*UserInfo, err
 
 // generateToken 生成 JWT Token
 func (s *Service) generateToken(userID int64) (string, error) {
-	// TODO: 实现 JWT 生成逻辑
-	// 这里只是占位，实际应该使用 jwt 库生成
-	_ = time.Now().Add(time.Duration(s.jwtExpireHours) * time.Hour)
-	return "token_placeholder_" + string(rune(userID)), nil
-}
+	now := time.Now()
+	expiresAt := now.Add(time.Duration(s.jwtExpireHours) * time.Hour)
 
+	// 创建 Claims
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"iat":     now.Unix(),       // 签发时间
+		"exp":     expiresAt.Unix(), // 过期时间
+		"nbf":     now.Unix(),       // 生效时间
+	}
+
+	// 创建 Token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// 签名并获取完整的 token 字符串
+	tokenString, err := token.SignedString([]byte(s.jwtSecret))
+	if err != nil {
+		return "", errors.New("生成 token 失败: " + err.Error())
+	}
+
+	return tokenString, nil
+}

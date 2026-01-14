@@ -6,6 +6,8 @@ import "time"
 // User 用户表
 type User struct {
 	ID          int64     `gorm:"primaryKey;autoIncrement"`
+	Username    string    `gorm:"type:varchar(32);uniqueIndex"`
+	Password    string    `gorm:"type:varchar(128)"`
 	OpenID      string    `gorm:"column:open_id;type:varchar(64);uniqueIndex"`
 	UnionID     string    `gorm:"column:union_id;type:varchar(64)"`
 	Nickname    string    `gorm:"type:varchar(32);not null"`

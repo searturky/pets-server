@@ -147,7 +147,7 @@ species:
     name: "凤凰"
     category: "fantasy"
     rarity: 4
-    is_hidden: false
+    is_hidden: true  # 隐藏物种，需要通过融合获得
     interpreter_type: "phoenix"
     base_parts: ["none"]
     special_parts: ["wing", "crest", "tail", "aura"]

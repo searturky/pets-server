@@ -10,6 +10,9 @@ type Repository interface {
 	// FindByID 根据ID查找用户
 	FindByID(ctx context.Context, id int64) (*User, error)
 
+	// FindByUsername 根据用户名查找用户
+	FindByUsername(ctx context.Context, username string) (*User, error)
+
 	// FindByOpenID 根据微信OpenID查找用户
 	FindByOpenID(ctx context.Context, openID string) (*User, error)
 

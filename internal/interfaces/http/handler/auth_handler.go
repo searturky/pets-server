@@ -24,6 +24,8 @@ func NewAuthHandler(authService *auth.Service) *AuthHandler {
 // RegisterRoutes 注册路由
 func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.POST("/wx-login", h.WxLogin)
+	r.POST("/login", h.Login)
+	r.POST("/register", h.Register)
 }
 
 // RegisterAuthRoutes 注册需要认证的路由
@@ -31,8 +33,44 @@ func (h *AuthHandler) RegisterAuthRoutes(r *gin.RouterGroup) {
 	r.GET("/me", h.GetCurrentUser)
 }
 
+// Login 账号密码登录
+// POST /api/v1/auth/login
+func (h *AuthHandler) Login(c *gin.Context) {
+	var req auth.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.authService.Login(c.Request.Context(), req)
+	if err != nil {
+		response.Error(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	response.Success(c, result)
+}
+
+// Register 账号注册
+// POST /api/v1/auth/register
+func (h *AuthHandler) Register(c *gin.Context) {
+	var req auth.RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.authService.Register(c.Request.Context(), req)
+	if err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	response.Success(c, result)
+}
+
 // WxLogin 微信登录
-// POST /api/auth/wx-login
+// POST /api/v1/auth/wx-login
 func (h *AuthHandler) WxLogin(c *gin.Context) {
 	var req auth.WxLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -50,7 +88,7 @@ func (h *AuthHandler) WxLogin(c *gin.Context) {
 }
 
 // GetCurrentUser 获取当前用户信息
-// GET /api/auth/me
+// GET /api/v1/auth/me
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -62,4 +100,3 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 
 	response.Success(c, userInfo)
 }
-

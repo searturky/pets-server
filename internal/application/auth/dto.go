@@ -29,3 +29,21 @@ type UpdateProfileRequest struct {
 	AvatarURL string `json:"avatarUrl"`
 }
 
+// LoginRequest 账号密码登录请求
+type LoginRequest struct {
+	Username string `json:"username" binding:"required"` // 用户名
+	Password string `json:"password" binding:"required"` // 密码
+}
+
+// RegisterRequest 账号注册请求
+type RegisterRequest struct {
+	Username string `json:"username" binding:"required"` // 用户名
+	Password string `json:"password" binding:"required"` // 密码
+	Nickname string `json:"nickname" binding:"required"` // 昵称
+}
+
+// LoginResponse 登录响应
+type LoginResponse struct {
+	Token    string   `json:"token"`    // JWT Token
+	UserInfo UserInfo `json:"userInfo"` // 用户信息
+}

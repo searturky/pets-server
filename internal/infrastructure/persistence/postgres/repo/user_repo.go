@@ -37,6 +37,21 @@ func (r *UserRepository) FindByID(ctx context.Context, id int64) (*user.User, er
 	return r.toDomain(&m), nil
 }
 
+// FindByUsername 根据用户名查找用户
+func (r *UserRepository) FindByUsername(ctx context.Context, username string) (*user.User, error) {
+	db := postgres.GetTx(ctx, r.db)
+
+	var m model.User
+	if err := db.Where("username = ?", username).First(&m).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, user.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return r.toDomain(&m), nil
+}
+
 // FindByOpenID 根据微信OpenID查找用户
 func (r *UserRepository) FindByOpenID(ctx context.Context, openID string) (*user.User, error) {
 	db := postgres.GetTx(ctx, r.db)
@@ -77,6 +92,8 @@ func (r *UserRepository) Delete(ctx context.Context, id int64) error {
 func (r *UserRepository) toDomain(m *model.User) *user.User {
 	return &user.User{
 		ID:          m.ID,
+		Username:    m.Username,
+		Password:    m.Password,
 		OpenID:      m.OpenID,
 		UnionID:     m.UnionID,
 		Nickname:    m.Nickname,
@@ -91,6 +108,8 @@ func (r *UserRepository) toDomain(m *model.User) *user.User {
 func (r *UserRepository) toModel(u *user.User) *model.User {
 	return &model.User{
 		ID:          u.ID,
+		Username:    u.Username,
+		Password:    u.Password,
 		OpenID:      u.OpenID,
 		UnionID:     u.UnionID,
 		Nickname:    u.Nickname,

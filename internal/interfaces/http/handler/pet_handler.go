@@ -24,11 +24,11 @@ func NewPetHandler(petService *petApp.Service) *PetHandler {
 
 // RegisterRoutes 注册路由
 func (h *PetHandler) RegisterRoutes(r *gin.RouterGroup) {
-	r.GET("", h.GetMyPet)         // 获取我的宠物（读操作示例）
-	r.POST("", h.CreatePet)       // 创建宠物
-	r.POST("/feed", h.Feed)       // 喂食（写操作示例）
-	r.POST("/play", h.Play)       // 玩耍
-	r.POST("/clean", h.Clean)     // 清洁
+	r.GET("", h.GetMyPet)     // 获取我的宠物（读操作示例）
+	r.POST("", h.CreatePet)   // 创建宠物
+	r.POST("/feed", h.Feed)   // 喂食（写操作示例）
+	r.POST("/play", h.Play)   // 玩耍
+	r.POST("/clean", h.Clean) // 清洁
 }
 
 // ============================================================
@@ -120,7 +120,7 @@ func (h *PetHandler) Feed(c *gin.Context) {
 }
 
 // CreatePet 创建宠物
-// POST /api/pet
+// POST /api/v1/pet
 func (h *PetHandler) CreatePet(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -144,7 +144,7 @@ func (h *PetHandler) CreatePet(c *gin.Context) {
 }
 
 // Play 和宠物玩耍
-// POST /api/pet/play
+// POST /api/v1/pet/play
 func (h *PetHandler) Play(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -158,7 +158,7 @@ func (h *PetHandler) Play(c *gin.Context) {
 }
 
 // Clean 清洁宠物
-// POST /api/pet/clean
+// POST /api/v1/pet/clean
 func (h *PetHandler) Clean(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -170,4 +170,3 @@ func (h *PetHandler) Clean(c *gin.Context) {
 
 	response.Success(c, result)
 }
-

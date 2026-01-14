@@ -2,11 +2,12 @@
 package middleware
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+
+	"pets-server/internal/pkg/response"
 )
 
 // JWTConfig JWT 配置
@@ -20,7 +21,7 @@ func AuthMiddleware(cfg JWTConfig) gin.HandlerFunc {
 		// 从 Header 获取 Token
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+			response.Unauthorized(c, "missing authorization header")
 			c.Abort()
 			return
 		}
@@ -28,7 +29,7 @@ func AuthMiddleware(cfg JWTConfig) gin.HandlerFunc {
 		// 解析 Bearer Token
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization format"})
+			response.Unauthorized(c, "invalid authorization format")
 			c.Abort()
 			return
 		}
@@ -41,7 +42,7 @@ func AuthMiddleware(cfg JWTConfig) gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			response.Unauthorized(c, "invalid token")
 			c.Abort()
 			return
 		}
@@ -49,14 +50,14 @@ func AuthMiddleware(cfg JWTConfig) gin.HandlerFunc {
 		// 从 Token 中提取用户ID
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token claims"})
+			response.Unauthorized(c, "invalid token claims")
 			c.Abort()
 			return
 		}
 
 		userID, ok := claims["user_id"].(float64)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user id in token"})
+			response.Unauthorized(c, "invalid user id in token")
 			c.Abort()
 			return
 		}
@@ -75,4 +76,3 @@ func GetUserID(c *gin.Context) int64 {
 	}
 	return 0
 }
-
