@@ -208,6 +208,8 @@ func (s *Service) CreatePet(ctx context.Context, userID int64, req CreatePetRequ
 		// 使用领域服务创建宠物
 		var p *pet.Pet
 		var err error
+		// TODO
+		req.SpeciesID = "" // TODO 临时处理
 		if req.SpeciesID != "" {
 			// 指定物种创建，解析物种ID
 			speciesIDInt, parseErr := strconv.Atoi(req.SpeciesID)

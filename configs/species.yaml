@@ -1,0 +1,325 @@
+# 物种配置文件
+# 定义所有物种的基础信息、规则和解释器映射
+
+species:
+  # ==================== 哺乳类 ====================
+  - id: 101
+    name: "猫"
+    category: "mammal"
+    rarity: 1
+    is_hidden: false
+    interpreter_type: "feline"
+    base_parts: ["none"]
+    special_parts: ["ear", "tail", "fur", "whisker"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 102
+    name: "狗"
+    category: "mammal"
+    rarity: 1
+    is_hidden: false
+    interpreter_type: "canine"
+    base_parts: ["none"]
+    special_parts: ["ear", "tail", "fur", "whisker"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 103
+    name: "兔子"
+    category: "mammal"
+    rarity: 1
+    is_hidden: false
+    interpreter_type: "feline"  # 暂用猫科解释器
+    base_parts: ["none"]
+    special_parts: ["ear", "tail", "fur", "whisker"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  # ==================== 鸟类 ====================
+  - id: 201
+    name: "鹦鹉"
+    category: "avian"
+    rarity: 2
+    is_hidden: false
+    interpreter_type: "parrot"
+    base_parts: ["none"]
+    special_parts: ["wing", "beak", "crest", "tail"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 202
+    name: "猫头鹰"
+    category: "avian"
+    rarity: 3
+    is_hidden: false
+    interpreter_type: "owl"
+    base_parts: ["none"]
+    special_parts: ["wing", "beak", "crest", "tail"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  # ==================== 鱼类 ====================
+  - id: 301
+    name: "金鱼"
+    category: "fish"
+    rarity: 1
+    is_hidden: false
+    interpreter_type: "goldfish"
+    base_parts: ["none"]
+    special_parts: ["fin", "scale", "tail_fin", "whisker"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 302
+    name: "热带鱼"
+    category: "fish"
+    rarity: 2
+    is_hidden: false
+    interpreter_type: "tropical_fish"
+    base_parts: ["none"]
+    special_parts: ["fin", "scale", "tail_fin", "whisker"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  # ==================== 幻想类 ====================
+  - id: 501
+    name: "史莱姆"
+    category: "fantasy"
+    rarity: 2
+    is_hidden: false
+    interpreter_type: "slime"
+    base_parts: ["none"]
+    special_parts: ["tail", "scale", "horn", "aura"]
+    gender_rule:
+      type: "asexual"
+      can_self_breed: true
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 502
+    name: "凤凰"
+    category: "fantasy"
+    rarity: 4
+    is_hidden: false
+    interpreter_type: "phoenix"
+    base_parts: ["none"]
+    special_parts: ["wing", "crest", "tail", "aura"]
+    gender_rule:
+      type: "mixed"
+      male_ratio: 40
+      female_ratio: 40
+      hermaphrodite_ratio: 20
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 503
+    name: "龙"
+    category: "fantasy"
+    rarity: 5
+    is_hidden: true  # 隐藏物种
+    interpreter_type: "dragon"
+    base_parts: ["none"]
+    special_parts: ["wing", "horn", "armor", "tail"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 504
+    name: "格里芬"
+    category: "fantasy"
+    rarity: 5
+    is_hidden: true  # 隐藏物种
+    interpreter_type: "griffin"
+    base_parts: ["none"]
+    special_parts: ["wing", "ear", "tail", "claw"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 505
+    name: "独角兽"
+    category: "fantasy"
+    rarity: 5
+    is_hidden: true  # 隐藏物种
+    interpreter_type: "unicorn"
+    base_parts: ["none"]
+    special_parts: ["horn", "fur", "tail", "aura"]
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  # ==================== 元素类 ====================
+  - id: 601
+    name: "火元素"
+    category: "elemental"
+    rarity: 3
+    is_hidden: false
+    interpreter_type: "slime"  # 复用史莱姆解释器
+    base_parts: ["none"]
+    special_parts: ["aura"]
+    gender_rule:
+      type: "asexual"
+      can_self_breed: true
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+  - id: 602
+    name: "水元素"
+    category: "elemental"
+    rarity: 3
+    is_hidden: false
+    interpreter_type: "slime"  # 复用史莱姆解释器
+    base_parts: ["none"]
+    special_parts: ["aura"]
+    gender_rule:
+      type: "asexual"
+      can_self_breed: true
+    breed_rules:
+      min_stage: "adult"
+      min_level: 10
+      min_happiness: 50
+      cooldown_hours: 24
+      self_breed_cooldown_hours: 48
+
+# ==================== 物种融合配置 ====================
+fusions:
+  # === 格里芬相关融合 ===
+  - species_a: 101  # 猫
+    species_b: 201  # 鹦鹉
+    result: 504     # 格里芬
+    trigger_threshold: 200
+    rarity: 5
+
+  - species_a: 101  # 猫
+    species_b: 202  # 猫头鹰
+    result: 504     # 格里芬
+    trigger_threshold: 190
+    rarity: 5
+
+  - species_a: 102  # 狗
+    species_b: 201  # 鹦鹉
+    result: 504     # 格里芬
+    trigger_threshold: 210
+    rarity: 5
+
+  # === 龙相关融合 ===
+  - species_a: 301  # 金鱼
+    species_b: 401  # 蜥蜴
+    result: 503     # 龙
+    trigger_threshold: 220
+    rarity: 5
+
+  - species_a: 302  # 热带鱼
+    species_b: 401  # 蜥蜴
+    result: 503     # 龙
+    trigger_threshold: 210
+    rarity: 5
+
+  - species_a: 502  # 凤凰
+    species_b: 401  # 蜥蜴
+    result: 503     # 龙
+    trigger_threshold: 180
+    rarity: 5
+
+  # === 独角兽相关融合 ===
+  - species_a: 103  # 兔子
+    species_b: 502  # 凤凰
+    result: 505     # 独角兽
+    trigger_threshold: 200
+    rarity: 5
+
+  - species_a: 102  # 狗
+    species_b: 502  # 凤凰
+    result: 505     # 独角兽
+    trigger_threshold: 220
+    rarity: 5
+
+  # === 凤凰变种融合 ===
+  - species_a: 202  # 猫头鹰
+    species_b: 502  # 凤凰
+    result: 502     # 更稀有的凤凰
+    trigger_threshold: 180
+    rarity: 5
+
+  - species_a: 201  # 鹦鹉
+    species_b: 601  # 火元素
+    result: 502     # 凤凰
+    trigger_threshold: 190
+    rarity: 5
+
+  # === 史莱姆融合 ===
+  - species_a: 501  # 史莱姆
+    species_b: 602  # 水元素
+    result: 501     # 水史莱姆变种
+    trigger_threshold: 150
+    rarity: 3

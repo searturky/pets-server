@@ -25,15 +25,15 @@ type ServiceSet struct {
 func ProvideServiceSet(
 	cfg *config.Config,
 	repos *RepoSet,
+	speciesRegistry *pet.SpeciesRegistry,
+	fusionRegistry *pet.SpeciesFusionRegistry,
 	uow *postgres.UnitOfWork,
 	cache *redis.CacheService,
 	rankingStore *redis.RankingStore,
 	wechatAuth *wechat.AuthService,
 	eventPublisher shared.EventPublisher,
 ) *ServiceSet {
-	// 创建领域服务
-	speciesRegistry := pet.NewSpeciesRegistry()
-	fusionRegistry := pet.NewSpeciesFusionRegistry()
+	// 创建领域服务（使用注入的注册表）
 	petDomainService := pet.NewDomainService(repos.Pet, speciesRegistry, fusionRegistry)
 
 	return &ServiceSet{

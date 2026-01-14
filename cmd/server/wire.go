@@ -15,6 +15,12 @@ func InitializeApp() (*App, func(), error) {
 	wire.Build(
 		// 配置
 		providers.ProvideConfig,
+		providers.ProvideSpeciesConfig,
+
+		// 物种注册表
+		providers.ProvideInterpreterFactory,
+		providers.ProvideSpeciesRegistry,
+		providers.ProvideFusionRegistry,
 
 		// 基础设施
 		providers.ProvideDB,

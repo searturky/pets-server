@@ -18,7 +18,8 @@ internal/domain/pet/
 ├── event.go             # 领域事件
 ├── repository.go        # 仓储接口
 └── interpreter/         # 物种基因解释器
-    ├── registry.go      # 物种注册表初始化
+    ├── factory.go       # 解释器工厂
+    ├── loader.go        # 配置加载器
     ├── feline.go        # 猫科/犬科解释器
     ├── avian.go         # 鸟类解释器
     ├── aquatic.go       # 水生类解释器
@@ -103,18 +104,32 @@ specialA := gene.SpecialA()             // 物种特征A 0-15
 ### 使用示例
 
 ```go
-import "pets-server/internal/domain/pet/interpreter"
+import (
+    "pets-server/internal/domain/pet"
+    "pets-server/internal/domain/pet/interpreter"
+    "pets-server/internal/pkg/config"
+)
 
-// 初始化物种注册表
-speciesRegistry := interpreter.InitDefaultRegistry()
-fusionRegistry := interpreter.InitDefaultFusionRegistry()
+// 从配置文件加载物种
+speciesConfig, err := config.LoadSpecies("configs/species.yaml")
+if err != nil {
+    // 处理错误
+}
+
+// 构建注册表
+factory := interpreter.NewInterpreterFactory()
+speciesRegistry, err := interpreter.BuildSpeciesRegistry(speciesConfig, factory)
+if err != nil {
+    // 处理错误
+}
+fusionRegistry := interpreter.BuildFusionRegistry(speciesConfig)
 
 // 获取物种定义
 species, ok := speciesRegistry.Get(pet.SpeciesCat)
 
 // 解析物种特有外观
-if interpreter, ok := speciesRegistry.GetInterpreter(pet.SpeciesCat); ok {
-    specialAppearance := interpreter.InterpretSpecialFeatures(gene)
+if interp, ok := speciesRegistry.GetInterpreter(pet.SpeciesCat); ok {
+    specialAppearance := interp.InterpretSpecialFeatures(gene)
 }
 
 // 获取可用物种列表
@@ -293,7 +308,8 @@ score := domainService.CalculatePetScore(pet)
 
 1. 在 `species.go` 中添加物种ID常量
 2. 创建物种解释器（实现 `GeneInterpreter` 接口）
-3. 在 `interpreter/registry.go` 中注册物种
+3. 在 `interpreter/factory.go` 中注册解释器
+4. 在 `configs/species.yaml` 中配置物种
 
 ```go
 // 1. 添加物种ID
@@ -310,22 +326,45 @@ func (n *NewPetInterpreter) InterpretSpecialFeatures(gene pet.Gene) pet.SpecialA
     // 实现特征解析
 }
 
-// 3. 注册物种
-registry.Register(&pet.Species{
-    ID:          pet.SpeciesNewPet,
-    Name:        "新物种",
-    Category:    pet.CategoryFantasy,
-    Interpreter: NewNewPetInterpreter(),
-    // ...
-})
+// 3. 在 factory.go 中注册
+func NewInterpreterFactory() *InterpreterFactory {
+    f := &InterpreterFactory{
+        interpreters: make(map[pet.SpeciesID]pet.GeneInterpreter),
+    }
+    // ... 其他解释器
+    f.Register(NewNewPetInterpreter())
+    return f
+}
+```
+
+4. 在 `configs/species.yaml` 中添加配置:
+
+```yaml
+species:
+  - id: 701
+    name: "新物种"
+    category: "fantasy"
+    base_parts: []
+    special_parts: ["特征1", "特征2"]
+    rarity: 3
+    is_hidden: false
+    gender_rule:
+      type: "default"
+    breed_rules:
+      min_stage: "adult"
+      min_level: 5
+      min_happiness: 60
 ```
 
 ### 添加新融合
 
-```go
-fusionRegistry.Register(pet.SpeciesA, pet.SpeciesB, pet.HiddenSpeciesConfig{
-    ResultSpecies:    pet.SpeciesHidden,
-    TriggerThreshold: 200,
-    Rarity:           5,
-})
+在 `configs/species.yaml` 中添加融合配置:
+
+```yaml
+fusions:
+  - parent1_id: 101  # SpeciesA
+    parent2_id: 201  # SpeciesB
+    result_id: 601   # SpeciesHidden
+    trigger_threshold: 200
+    rarity: 5
 ```

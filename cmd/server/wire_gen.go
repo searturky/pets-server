@@ -24,6 +24,18 @@ func InitializeApp() (*App, func(), error) {
 		return nil, nil, err
 	}
 	repoSet := providers.ProvideRepoSet(db)
+	speciesConfig, err := providers.ProvideSpeciesConfig()
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	interpreterFactory := providers.ProvideInterpreterFactory()
+	speciesRegistry, err := providers.ProvideSpeciesRegistry(speciesConfig, interpreterFactory)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	speciesFusionRegistry := providers.ProvideFusionRegistry(speciesConfig)
 	unitOfWork := providers.ProvideUnitOfWork(db)
 	client, cleanup2, err := providers.ProvideRedis(config)
 	if err != nil {
@@ -39,7 +51,7 @@ func InitializeApp() (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	serviceSet := providers.ProvideServiceSet(config, repoSet, unitOfWork, cacheService, rankingStore, authService, eventPublisher)
+	serviceSet := providers.ProvideServiceSet(config, repoSet, speciesRegistry, speciesFusionRegistry, unitOfWork, cacheService, rankingStore, authService, eventPublisher)
 	hub := providers.ProvideWSHub()
 	handler := providers.ProvideWSHandler(hub)
 	engine := providers.ProvideRouter(config, serviceSet, handler)
