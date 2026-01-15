@@ -38,7 +38,7 @@ func (s *DomainService) GetBreedingService() *BreedingService {
 // --- 宠物创建 ---
 
 // CreatePet 创建新宠物（指定物种）
-func (s *DomainService) CreatePet(userID int64, name string, speciesID SpeciesID) (*Pet, error) {
+func (s *DomainService) CreatePet(userID int, name string, speciesID SpeciesID) (*Pet, error) {
 	// 获取物种定义
 	species, ok := s.speciesRegistry.Get(speciesID)
 	if !ok {
@@ -57,7 +57,7 @@ func (s *DomainService) CreatePet(userID int64, name string, speciesID SpeciesID
 }
 
 // CreateRandomPet 创建随机物种的宠物
-func (s *DomainService) CreateRandomPet(userID int64, name string) *Pet {
+func (s *DomainService) CreateRandomPet(userID int, name string) *Pet {
 	// 获取可用物种列表
 	availableSpecies := s.speciesRegistry.GetAvailableSpecies()
 	if len(availableSpecies) == 0 {
@@ -107,7 +107,7 @@ func (s *DomainService) CreateRandomPet(userID int64, name string) *Pet {
 // --- 繁殖相关 ---
 
 // BreedPets 繁殖两只宠物
-func (s *DomainService) BreedPets(parent1, parent2 *Pet, childName string, ownerID int64) (*BreedingResult, error) {
+func (s *DomainService) BreedPets(parent1, parent2 *Pet, childName string, ownerID int) (*BreedingResult, error) {
 	return s.breedingService.Breed(BreedingRequest{
 		Parent1:   parent1,
 		Parent2:   parent2,
@@ -117,7 +117,7 @@ func (s *DomainService) BreedPets(parent1, parent2 *Pet, childName string, owner
 }
 
 // SelfBreedPet 分裂繁殖
-func (s *DomainService) SelfBreedPet(parent *Pet, childName string, ownerID int64) (*BreedingResult, error) {
+func (s *DomainService) SelfBreedPet(parent *Pet, childName string, ownerID int) (*BreedingResult, error) {
 	return s.breedingService.Breed(BreedingRequest{
 		Parent1:   parent,
 		Parent2:   nil,

@@ -22,7 +22,7 @@ func ProvideConfig() (*config.Config, error) {
 	}
 
 	// 设置 Gin 模式
-	gin.SetMode(cfg.Server.Mode)
+	gin.SetMode(string(cfg.Server.Mode))
 
 	return cfg, nil
 }

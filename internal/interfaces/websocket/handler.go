@@ -23,7 +23,7 @@ var upgrader = websocket.Upgrader{
 
 // Client WebSocket 客户端
 type Client struct {
-	UserID int64
+	UserID int
 	hub    *Hub
 	conn   *websocket.Conn
 	send   chan *Message

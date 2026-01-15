@@ -24,7 +24,7 @@ func NewFriendRepository(db *gorm.DB) *FriendRepository {
 }
 
 // FindByID 根据ID查找好友关系
-func (r *FriendRepository) FindByID(ctx context.Context, id int64) (*social.Friendship, error) {
+func (r *FriendRepository) FindByID(ctx context.Context, id int) (*social.Friendship, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var m model.Friendship
@@ -39,7 +39,7 @@ func (r *FriendRepository) FindByID(ctx context.Context, id int64) (*social.Frie
 }
 
 // FindByUsers 根据两个用户ID查找好友关系
-func (r *FriendRepository) FindByUsers(ctx context.Context, userID, friendID int64) (*social.Friendship, error) {
+func (r *FriendRepository) FindByUsers(ctx context.Context, userID, friendID int) (*social.Friendship, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var m model.Friendship
@@ -55,7 +55,7 @@ func (r *FriendRepository) FindByUsers(ctx context.Context, userID, friendID int
 }
 
 // FindFriends 获取用户的所有好友
-func (r *FriendRepository) FindFriends(ctx context.Context, userID int64) ([]*social.Friendship, error) {
+func (r *FriendRepository) FindFriends(ctx context.Context, userID int) ([]*social.Friendship, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.Friendship
@@ -73,7 +73,7 @@ func (r *FriendRepository) FindFriends(ctx context.Context, userID int64) ([]*so
 }
 
 // FindPendingRequests 获取待处理的好友申请
-func (r *FriendRepository) FindPendingRequests(ctx context.Context, userID int64) ([]*social.Friendship, error) {
+func (r *FriendRepository) FindPendingRequests(ctx context.Context, userID int) ([]*social.Friendship, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.Friendship
@@ -104,7 +104,7 @@ func (r *FriendRepository) Save(ctx context.Context, f *social.Friendship) error
 }
 
 // Delete 删除好友关系
-func (r *FriendRepository) Delete(ctx context.Context, id int64) error {
+func (r *FriendRepository) Delete(ctx context.Context, id int) error {
 	db := postgres.GetTx(ctx, r.db)
 	return db.Delete(&model.Friendship{}, id).Error
 }
@@ -122,15 +122,15 @@ func (r *FriendRepository) toDomain(m *model.Friendship) *social.Friendship {
 }
 
 func (r *FriendRepository) toModel(f *social.Friendship) *model.Friendship {
-	return &model.Friendship{
-		ID:          f.ID,
+	m := &model.Friendship{
 		UserID:      f.UserID,
 		FriendID:    f.FriendID,
 		Status:      int16(f.Status),
 		Intimacy:    f.Intimacy,
-		CreatedAt:   f.CreatedAt,
 		ConfirmedAt: f.ConfirmedAt,
 	}
+	m.ID = f.ID
+	return m
 }
 
 // --- GiftRepository ---
@@ -146,7 +146,7 @@ func NewGiftRepository(db *gorm.DB) *GiftRepository {
 }
 
 // FindByID 根据ID查找礼物记录
-func (r *GiftRepository) FindByID(ctx context.Context, id int64) (*social.GiftRecord, error) {
+func (r *GiftRepository) FindByID(ctx context.Context, id int) (*social.GiftRecord, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var m model.GiftRecord
@@ -158,7 +158,7 @@ func (r *GiftRepository) FindByID(ctx context.Context, id int64) (*social.GiftRe
 }
 
 // FindByReceiver 获取用户收到的礼物
-func (r *GiftRepository) FindByReceiver(ctx context.Context, userID int64, onlyUnread bool) ([]*social.GiftRecord, error) {
+func (r *GiftRepository) FindByReceiver(ctx context.Context, userID int, onlyUnread bool) ([]*social.GiftRecord, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	query := db.Where("to_user_id = ?", userID)
@@ -180,7 +180,7 @@ func (r *GiftRepository) FindByReceiver(ctx context.Context, userID int64, onlyU
 }
 
 // FindBySender 获取用户发送的礼物
-func (r *GiftRepository) FindBySender(ctx context.Context, userID int64) ([]*social.GiftRecord, error) {
+func (r *GiftRepository) FindBySender(ctx context.Context, userID int) ([]*social.GiftRecord, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.GiftRecord
@@ -201,15 +201,14 @@ func (r *GiftRepository) Save(ctx context.Context, g *social.GiftRecord) error {
 	db := postgres.GetTx(ctx, r.db)
 
 	m := &model.GiftRecord{
-		ID:         g.ID,
 		FromUserID: g.FromUserID,
 		ToUserID:   g.ToUserID,
 		ItemID:     g.ItemID,
 		Quantity:   g.Quantity,
 		Message:    g.Message,
 		IsRead:     g.IsRead,
-		CreatedAt:  g.CreatedAt,
 	}
+	m.ID = g.ID
 
 	if err := db.Save(m).Error; err != nil {
 		return err
@@ -245,7 +244,7 @@ func NewTradeRepository(db *gorm.DB) *TradeRepository {
 }
 
 // FindByID 根据ID查找交易
-func (r *TradeRepository) FindByID(ctx context.Context, id int64) (*social.Trade, error) {
+func (r *TradeRepository) FindByID(ctx context.Context, id int) (*social.Trade, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var m model.Trade
@@ -260,7 +259,7 @@ func (r *TradeRepository) FindByID(ctx context.Context, id int64) (*social.Trade
 }
 
 // FindByUser 获取用户相关的交易
-func (r *TradeRepository) FindByUser(ctx context.Context, userID int64) ([]*social.Trade, error) {
+func (r *TradeRepository) FindByUser(ctx context.Context, userID int) ([]*social.Trade, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.Trade
@@ -278,7 +277,7 @@ func (r *TradeRepository) FindByUser(ctx context.Context, userID int64) ([]*soci
 }
 
 // FindPending 获取待处理的交易
-func (r *TradeRepository) FindPending(ctx context.Context, userID int64) ([]*social.Trade, error) {
+func (r *TradeRepository) FindPending(ctx context.Context, userID int) ([]*social.Trade, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.Trade
@@ -300,7 +299,6 @@ func (r *TradeRepository) Save(ctx context.Context, t *social.Trade) error {
 	db := postgres.GetTx(ctx, r.db)
 
 	m := &model.Trade{
-		ID:              t.ID,
 		FromUserID:      t.FromUserID,
 		ToUserID:        t.ToUserID,
 		OfferItemID:     t.OfferItemID,
@@ -308,9 +306,9 @@ func (r *TradeRepository) Save(ctx context.Context, t *social.Trade) error {
 		RequestItemID:   t.RequestItemID,
 		RequestQuantity: t.RequestQuantity,
 		Status:          int16(t.Status),
-		CreatedAt:       t.CreatedAt,
 		CompletedAt:     t.CompletedAt,
 	}
+	m.ID = t.ID
 
 	if err := db.Save(m).Error; err != nil {
 		return err
@@ -348,7 +346,7 @@ func NewVisitRepository(db *gorm.DB) *VisitRepository {
 }
 
 // RecordVisit 记录拜访
-func (r *VisitRepository) RecordVisit(ctx context.Context, visitorID, hostID int64) error {
+func (r *VisitRepository) RecordVisit(ctx context.Context, visitorID, hostID int) error {
 	db := postgres.GetTx(ctx, r.db)
 
 	m := &model.VisitRecord{
@@ -360,13 +358,13 @@ func (r *VisitRepository) RecordVisit(ctx context.Context, visitorID, hostID int
 }
 
 // CountTodayVisits 统计今日被拜访次数
-func (r *VisitRepository) CountTodayVisits(ctx context.Context, hostID int64) (int, error) {
+func (r *VisitRepository) CountTodayVisits(ctx context.Context, hostID int) (int, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	today := time.Now().Truncate(24 * time.Hour)
 	var count int64
 	if err := db.Model(&model.VisitRecord{}).
-		Where("host_id = ? AND visited_at >= ?", hostID, today).
+		Where("host_id = ? AND created_at >= ?", hostID, today).
 		Count(&count).Error; err != nil {
 		return 0, err
 	}
@@ -375,17 +373,16 @@ func (r *VisitRepository) CountTodayVisits(ctx context.Context, hostID int64) (i
 }
 
 // HasVisitedToday 今天是否已拜访过
-func (r *VisitRepository) HasVisitedToday(ctx context.Context, visitorID, hostID int64) (bool, error) {
+func (r *VisitRepository) HasVisitedToday(ctx context.Context, visitorID, hostID int) (bool, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	today := time.Now().Truncate(24 * time.Hour)
 	var count int64
 	if err := db.Model(&model.VisitRecord{}).
-		Where("visitor_id = ? AND host_id = ? AND visited_at >= ?", visitorID, hostID, today).
+		Where("visitor_id = ? AND host_id = ? AND created_at >= ?", visitorID, hostID, today).
 		Count(&count).Error; err != nil {
 		return false, err
 	}
 
 	return count > 0, nil
 }
-

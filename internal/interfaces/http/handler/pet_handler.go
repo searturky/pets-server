@@ -45,7 +45,16 @@ func (h *PetHandler) RegisterRoutes(r *gin.RouterGroup) {
 // ============================================================
 
 // GetMyPet 获取我的宠物
-// GET /api/pet
+// @Summary      获取我的宠物
+// @Description  获取当前用户的宠物详细信息，包括外观、性格、技能和状态
+// @Tags         pet
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200 {object} response.Response{data=petApp.PetDetailDTO} "获取成功"
+// @Failure      404 {object} response.Response "还没有宠物"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /pet [get]
 func (h *PetHandler) GetMyPet(c *gin.Context) {
 	// 1. 从中间件获取用户ID
 	userID := middleware.GetUserID(c)
@@ -88,7 +97,17 @@ func (h *PetHandler) GetMyPet(c *gin.Context) {
 // ============================================================
 
 // Feed 喂食宠物
-// POST /api/pet/feed
+// @Summary      喂食宠物
+// @Description  使用食物道具喂食宠物，增加饱食度和经验值，可能升级
+// @Tags         pet
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Param        request body petApp.FeedPetRequest true "喂食请求"
+// @Success      200 {object} response.Response{data=petApp.FeedPetResponse} "喂食成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /pet/feed [post]
 func (h *PetHandler) Feed(c *gin.Context) {
 	// 1. 获取用户ID
 	userID := middleware.GetUserID(c)
@@ -120,7 +139,18 @@ func (h *PetHandler) Feed(c *gin.Context) {
 }
 
 // CreatePet 创建宠物
-// POST /api/v1/pet
+// @Summary      创建宠物
+// @Description  创建一个新宠物，可以指定物种或随机生成
+// @Tags         pet
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Param        request body petApp.CreatePetRequest true "创建宠物请求"
+// @Success      200 {object} response.Response{data=petApp.CreatePetResponse} "创建成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      409 {object} response.Response "已拥有宠物"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /pet [post]
 func (h *PetHandler) CreatePet(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -144,7 +174,16 @@ func (h *PetHandler) CreatePet(c *gin.Context) {
 }
 
 // Play 和宠物玩耍
-// POST /api/v1/pet/play
+// @Summary      和宠物玩耍
+// @Description  与宠物互动玩耍，增加快乐度和经验值，消耗精力
+// @Tags         pet
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200 {object} response.Response{data=petApp.PlayPetResponse} "玩耍成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /pet/play [post]
 func (h *PetHandler) Play(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
@@ -158,7 +197,16 @@ func (h *PetHandler) Play(c *gin.Context) {
 }
 
 // Clean 清洁宠物
-// POST /api/v1/pet/clean
+// @Summary      清洁宠物
+// @Description  清洁宠物，增加清洁度
+// @Tags         pet
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200 {object} response.Response{data=petApp.CleanPetResponse} "清洁成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /pet/clean [post]
 func (h *PetHandler) Clean(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 

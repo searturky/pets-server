@@ -16,7 +16,7 @@ type WxLoginResponse struct {
 
 // UserInfo 用户信息
 type UserInfo struct {
-	ID        int64  `json:"id"`
+	ID        int    `json:"id"`
 	Nickname  string `json:"nickname"`
 	AvatarURL string `json:"avatarUrl"`
 	Coins     int    `json:"coins"`

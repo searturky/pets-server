@@ -181,7 +181,7 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (*LoginResp
 }
 
 // GetUserInfo 获取用户信息
-func (s *Service) GetUserInfo(ctx context.Context, userID int64) (*UserInfo, error) {
+func (s *Service) GetUserInfo(ctx context.Context, userID int) (*UserInfo, error) {
 	u, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func (s *Service) GetUserInfo(ctx context.Context, userID int64) (*UserInfo, err
 }
 
 // generateToken 生成 JWT Token
-func (s *Service) generateToken(userID int64) (string, error) {
+func (s *Service) generateToken(userID int) (string, error) {
 	now := time.Now()
 	expiresAt := now.Add(time.Duration(s.jwtExpireHours) * time.Hour)
 

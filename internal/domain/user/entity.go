@@ -11,7 +11,7 @@ import (
 // User 用户实体
 // 聚合根，代表游戏中的玩家
 type User struct {
-	ID          int64     // 用户唯一标识
+	ID          int       // 用户唯一标识
 	Username    string    // 用户名（用于账号密码登录）
 	Password    string    // 密码哈希（用于账号密码登录）
 	OpenID      string    // 微信 OpenID

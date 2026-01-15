@@ -63,15 +63,15 @@ func AuthMiddleware(cfg JWTConfig) gin.HandlerFunc {
 		}
 
 		// 将用户ID存入上下文
-		c.Set("userID", int64(userID))
+		c.Set("userID", int(userID))
 		c.Next()
 	}
 }
 
 // GetUserID 从上下文获取用户ID
-func GetUserID(c *gin.Context) int64 {
+func GetUserID(c *gin.Context) int {
 	userID, _ := c.Get("userID")
-	if id, ok := userID.(int64); ok {
+	if id, ok := userID.(int); ok {
 		return id
 	}
 	return 0

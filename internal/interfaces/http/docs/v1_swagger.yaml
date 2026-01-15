@@ -1,0 +1,1178 @@
+basePath: /api/v1
+definitions:
+  auth.LoginRequest:
+    properties:
+      password:
+        description: 密码
+        type: string
+      username:
+        description: 用户名
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  auth.LoginResponse:
+    properties:
+      token:
+        description: JWT Token
+        type: string
+      userInfo:
+        allOf:
+        - $ref: '#/definitions/auth.UserInfo'
+        description: 用户信息
+    type: object
+  auth.RegisterRequest:
+    properties:
+      nickname:
+        description: 昵称
+        type: string
+      password:
+        description: 密码
+        type: string
+      username:
+        description: 用户名
+        type: string
+    required:
+    - nickname
+    - password
+    - username
+    type: object
+  auth.UserInfo:
+    properties:
+      avatarUrl:
+        type: string
+      coins:
+        type: integer
+      diamonds:
+        type: integer
+      id:
+        type: integer
+      nickname:
+        type: string
+    type: object
+  auth.WxLoginRequest:
+    properties:
+      code:
+        description: 微信登录凭证
+        type: string
+    required:
+    - code
+    type: object
+  auth.WxLoginResponse:
+    properties:
+      isNew:
+        description: 是否新用户
+        type: boolean
+      token:
+        description: JWT Token
+        type: string
+      userInfo:
+        allOf:
+        - $ref: '#/definitions/auth.UserInfo'
+        description: 用户信息
+    type: object
+  handler.BuyRequest:
+    properties:
+      itemId:
+        description: 道具ID
+        type: integer
+      quantity:
+        description: 购买数量
+        minimum: 1
+        type: integer
+    required:
+    - itemId
+    - quantity
+    type: object
+  pet.AppearanceDTO:
+    properties:
+      bodyType:
+        type: string
+      colorPrimary:
+        type: string
+      colorSecondary:
+        type: string
+      description:
+        type: string
+      patternType:
+        type: string
+    type: object
+  pet.CleanPetResponse:
+    properties:
+      cleanliness:
+        description: 当前清洁度
+        type: integer
+    type: object
+  pet.CreatePetRequest:
+    properties:
+      name:
+        description: 宠物名称
+        maxLength: 20
+        minLength: 1
+        type: string
+      speciesId:
+        description: 物种ID（可选，不填则随机）
+        type: string
+    required:
+    - name
+    type: object
+  pet.CreatePetResponse:
+    properties:
+      pet:
+        $ref: '#/definitions/pet.PetDetailDTO'
+    type: object
+  pet.FeedPetRequest:
+    properties:
+      foodItemId:
+        description: 食物道具ID
+        type: integer
+    required:
+    - foodItemId
+    type: object
+  pet.FeedPetResponse:
+    properties:
+      expGained:
+        description: 获得经验
+        type: integer
+      hunger:
+        description: 当前饱食度
+        type: integer
+      levelUp:
+        description: 是否升级
+        type: boolean
+      newLevel:
+        description: 新等级（如果升级）
+        type: integer
+    type: object
+  pet.PersonalityDTO:
+    properties:
+      activity:
+        type: integer
+      appetite:
+        type: integer
+      curiosity:
+        type: integer
+      description:
+        type: string
+      social:
+        type: integer
+    type: object
+  pet.PetDetailDTO:
+    properties:
+      appearance:
+        allOf:
+        - $ref: '#/definitions/pet.AppearanceDTO'
+        description: 外观
+      exp:
+        description: 当前经验
+        type: integer
+      expToNext:
+        description: 升级所需经验
+        type: integer
+      geneCode:
+        description: 基因码（可选，用于展示独特性）
+        type: string
+      id:
+        type: integer
+      level:
+        description: 等级
+        type: integer
+      name:
+        type: string
+      personality:
+        allOf:
+        - $ref: '#/definitions/pet.PersonalityDTO'
+        description: 性格
+      skill:
+        allOf:
+        - $ref: '#/definitions/pet.SkillDTO'
+        description: 技能
+      stage:
+        description: 成长
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/pet.StatusDTO'
+        description: 状态
+    type: object
+  pet.PlayPetResponse:
+    properties:
+      energy:
+        description: 当前精力
+        type: integer
+      expGained:
+        description: 获得经验
+        type: integer
+      happiness:
+        description: 当前快乐度
+        type: integer
+      levelUp:
+        description: 是否升级
+        type: boolean
+    type: object
+  pet.SkillDTO:
+    properties:
+      description:
+        type: string
+      level:
+        type: integer
+      name:
+        type: string
+      rarity:
+        type: string
+    type: object
+  pet.StatusDTO:
+    properties:
+      cleanliness:
+        type: integer
+      energy:
+        type: integer
+      happiness:
+        type: integer
+      hunger:
+        type: integer
+      isDirty:
+        type: boolean
+      isHungry:
+        type: boolean
+      isTired:
+        type: boolean
+      isUnhappy:
+        type: boolean
+    type: object
+  ranking.RankItemDTO:
+    properties:
+      avatarUrl:
+        type: string
+      nickname:
+        type: string
+      petName:
+        type: string
+      rank:
+        type: integer
+      score:
+        type: integer
+      userId:
+        type: integer
+    type: object
+  ranking.RankType:
+    enum:
+    - pet_level
+    - achievement
+    - intimacy
+    type: string
+    x-enum-comments:
+      RankTypeAchievement: 成就数量排行
+      RankTypeIntimacy: 亲密度排行
+      RankTypePetLevel: 宠物等级排行
+    x-enum-descriptions:
+    - 宠物等级排行
+    - 成就数量排行
+    - 亲密度排行
+    x-enum-varnames:
+    - RankTypePetLevel
+    - RankTypeAchievement
+    - RankTypeIntimacy
+  ranking.RankingResponse:
+    properties:
+      myRank:
+        $ref: '#/definitions/ranking.RankItemDTO'
+      rankings:
+        items:
+          $ref: '#/definitions/ranking.RankItemDTO'
+        type: array
+      type:
+        $ref: '#/definitions/ranking.RankType'
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  social.AddFriendRequest:
+    properties:
+      friendId:
+        type: integer
+    required:
+    - friendId
+    type: object
+  social.CreateTradeRequest:
+    properties:
+      offerItemId:
+        type: integer
+      offerQuantity:
+        minimum: 1
+        type: integer
+      requestItemId:
+        type: integer
+      requestQuantity:
+        minimum: 1
+        type: integer
+      toUserId:
+        type: integer
+    required:
+    - offerItemId
+    - offerQuantity
+    - requestItemId
+    - requestQuantity
+    - toUserId
+    type: object
+  social.FriendDTO:
+    properties:
+      avatarUrl:
+        type: string
+      intimacy:
+        type: integer
+      intimacyLevel:
+        type: string
+      nickname:
+        type: string
+      petLevel:
+        type: integer
+      petName:
+        type: string
+      userId:
+        type: integer
+    type: object
+  social.FriendListResponse:
+    properties:
+      friends:
+        items:
+          $ref: '#/definitions/social.FriendDTO'
+        type: array
+      total:
+        type: integer
+    type: object
+  social.SendGiftRequest:
+    properties:
+      itemId:
+        type: integer
+      message:
+        maxLength: 128
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+      toUserId:
+        type: integer
+    required:
+    - itemId
+    - quantity
+    - toUserId
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: 宠物养成游戏后端 REST API 文档
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: 宠物养成游戏 API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 使用用户名和密码登录获取 JWT token
+      parameters:
+      - description: 登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.LoginResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: 用户名或密码错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 账号密码登录
+      tags:
+      - auth
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户的详细信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.UserInfo'
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取当前用户信息
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 注册新用户账号
+      parameters:
+      - description: 注册请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 注册成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.LoginResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: 用户名已存在
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 用户注册
+      tags:
+      - auth
+  /auth/wx-login:
+    post:
+      consumes:
+      - application/json
+      description: 通过微信 code 登录获取 JWT token
+      parameters:
+      - description: 微信登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.WxLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.WxLoginResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 微信登录
+      tags:
+      - auth
+  /items:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户背包中的所有道具列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取背包道具
+      tags:
+      - item
+  /items/buy:
+    post:
+      consumes:
+      - application/json
+      description: 在商店购买道具
+      parameters:
+      - description: 购买请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.BuyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 购买成功
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 购买道具
+      tags:
+      - item
+  /items/shop:
+    get:
+      consumes:
+      - application/json
+      description: 获取商店中可购买的道具列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取商店道具
+      tags:
+      - item
+  /items/use:
+    post:
+      consumes:
+      - application/json
+      description: 使用背包中的道具
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 使用成功
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 使用道具
+      tags:
+      - item
+  /pet:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的宠物详细信息，包括外观、性格、技能和状态
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/pet.PetDetailDTO'
+              type: object
+        "404":
+          description: 还没有宠物
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取我的宠物
+      tags:
+      - pet
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新宠物，可以指定物种或随机生成
+      parameters:
+      - description: 创建宠物请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pet.CreatePetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/pet.CreatePetResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "409":
+          description: 已拥有宠物
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 创建宠物
+      tags:
+      - pet
+  /pet/clean:
+    post:
+      consumes:
+      - application/json
+      description: 清洁宠物，增加清洁度
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 清洁成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/pet.CleanPetResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 清洁宠物
+      tags:
+      - pet
+  /pet/feed:
+    post:
+      consumes:
+      - application/json
+      description: 使用食物道具喂食宠物，增加饱食度和经验值，可能升级
+      parameters:
+      - description: 喂食请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pet.FeedPetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 喂食成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/pet.FeedPetResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 喂食宠物
+      tags:
+      - pet
+  /pet/play:
+    post:
+      consumes:
+      - application/json
+      description: 与宠物互动玩耍，增加快乐度和经验值，消耗精力
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 玩耍成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/pet.PlayPetResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 和宠物玩耍
+      tags:
+      - pet
+  /ranking:
+    get:
+      consumes:
+      - application/json
+      description: 获取排行榜数据，支持宠物等级、成就数量、亲密度等类型
+      parameters:
+      - description: 排行榜类型
+        enum:
+        - pet_level
+        - achievement
+        - intimacy
+        in: query
+        name: type
+        required: true
+        type: string
+      - default: 0
+        description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      - default: 20
+        description: 数量限制
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/ranking.RankingResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取排行榜
+      tags:
+      - ranking
+  /social/friends:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的好友列表，包括亲密度等信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/social.FriendListResponse'
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取好友列表
+      tags:
+      - social
+  /social/friends/accept/{id}:
+    post:
+      consumes:
+      - application/json
+      description: 接受指定的好友申请
+      parameters:
+      - description: 好友申请ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 已添加为好友
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 接受好友申请
+      tags:
+      - social
+  /social/friends/request:
+    post:
+      consumes:
+      - application/json
+      description: 向指定用户发送好友申请
+      parameters:
+      - description: 好友申请
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/social.AddFriendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 申请已发送
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 发送好友申请
+      tags:
+      - social
+  /social/friends/requests:
+    get:
+      consumes:
+      - application/json
+      description: 获取待处理的好友申请列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取好友申请列表
+      tags:
+      - social
+  /social/gifts:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户收到的礼物列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取收到的礼物
+      tags:
+      - social
+    post:
+      consumes:
+      - application/json
+      description: 向好友发送礼物
+      parameters:
+      - description: 礼物请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/social.SendGiftRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 发送成功
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 发送礼物
+      tags:
+      - social
+  /social/trades:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的交易记录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+              type: object
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取交易列表
+      tags:
+      - social
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的道具交易请求
+      parameters:
+      - description: 交易请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/social.CreateTradeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 创建交易
+      tags:
+      - social
+  /social/trades/accept/{id}:
+    post:
+      consumes:
+      - application/json
+      description: 接受指定的交易请求
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 交易完成
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 接受交易
+      tags:
+      - social
+  /social/trades/cancel/{id}:
+    post:
+      consumes:
+      - application/json
+      description: 取消指定的交易请求
+      parameters:
+      - description: 交易ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 交易已取消
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 取消交易
+      tags:
+      - social
+  /social/visit/{userId}:
+    get:
+      consumes:
+      - application/json
+      description: 拜访好友的宠物，可获得奖励
+      parameters:
+      - description: 好友用户ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 拜访成功
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 拜访好友
+      tags:
+      - social
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

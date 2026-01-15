@@ -24,12 +24,12 @@ func NewCacheService(client *redis.Client) *CacheService {
 
 // --- 宠物详情缓存 ---
 
-func petDetailKey(userID int64) string {
+func petDetailKey(userID int) string {
 	return fmt.Sprintf("pet:detail:%d", userID)
 }
 
 // GetPetDetail 获取宠物详情缓存
-func (c *CacheService) GetPetDetail(ctx context.Context, userID int64) (*petApp.PetDetailDTO, error) {
+func (c *CacheService) GetPetDetail(ctx context.Context, userID int) (*petApp.PetDetailDTO, error) {
 	key := petDetailKey(userID)
 
 	data, err := c.client.Get(ctx, key).Bytes()
@@ -49,7 +49,7 @@ func (c *CacheService) GetPetDetail(ctx context.Context, userID int64) (*petApp.
 }
 
 // SetPetDetail 设置宠物详情缓存
-func (c *CacheService) SetPetDetail(ctx context.Context, userID int64, pet *petApp.PetDetailDTO, ttl time.Duration) error {
+func (c *CacheService) SetPetDetail(ctx context.Context, userID int, pet *petApp.PetDetailDTO, ttl time.Duration) error {
 	key := petDetailKey(userID)
 
 	data, err := json.Marshal(pet)
@@ -61,7 +61,7 @@ func (c *CacheService) SetPetDetail(ctx context.Context, userID int64, pet *petA
 }
 
 // DeletePetDetail 删除宠物详情缓存
-func (c *CacheService) DeletePetDetail(ctx context.Context, userID int64) error {
+func (c *CacheService) DeletePetDetail(ctx context.Context, userID int) error {
 	key := petDetailKey(userID)
 	return c.client.Del(ctx, key).Err()
 }

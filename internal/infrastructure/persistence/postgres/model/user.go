@@ -5,7 +5,7 @@ import "time"
 
 // User 用户表
 type User struct {
-	ID          int64     `gorm:"primaryKey;autoIncrement"`
+	BaseModel
 	Username    string    `gorm:"type:varchar(32);uniqueIndex"`
 	Password    string    `gorm:"type:varchar(128)"`
 	OpenID      string    `gorm:"column:open_id;type:varchar(64);uniqueIndex"`
@@ -14,7 +14,6 @@ type User struct {
 	AvatarURL   string    `gorm:"column:avatar_url;type:varchar(256)"`
 	Coins       int       `gorm:"default:0"`
 	Diamonds    int       `gorm:"default:0"`
-	CreatedAt   time.Time `gorm:"autoCreateTime"`
 	LastLoginAt time.Time `gorm:"column:last_login_at"`
 }
 
@@ -22,4 +21,3 @@ type User struct {
 func (User) TableName() string {
 	return "users"
 }
-

@@ -8,12 +8,12 @@ import "time"
 
 // AddFriendRequest 添加好友请求
 type AddFriendRequest struct {
-	FriendID int64 `json:"friendId" binding:"required"`
+	FriendID int `json:"friendId" binding:"required"`
 }
 
 // FriendDTO 好友DTO
 type FriendDTO struct {
-	UserID        int64  `json:"userId"`
+	UserID        int    `json:"userId"`
 	Nickname      string `json:"nickname"`
 	AvatarURL     string `json:"avatarUrl"`
 	Intimacy      int    `json:"intimacy"`
@@ -24,8 +24,8 @@ type FriendDTO struct {
 
 // FriendRequestDTO 好友申请DTO
 type FriendRequestDTO struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"userId"`
+	ID        int       `json:"id"`
+	UserID    int       `json:"userId"`
 	Nickname  string    `json:"nickname"`
 	AvatarURL string    `json:"avatarUrl"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -41,7 +41,7 @@ type FriendListResponse struct {
 
 // SendGiftRequest 发送礼物请求
 type SendGiftRequest struct {
-	ToUserID int64  `json:"toUserId" binding:"required"`
+	ToUserID int    `json:"toUserId" binding:"required"`
 	ItemID   int    `json:"itemId" binding:"required"`
 	Quantity int    `json:"quantity" binding:"required,min=1"`
 	Message  string `json:"message" binding:"max=128"`
@@ -49,8 +49,8 @@ type SendGiftRequest struct {
 
 // GiftRecordDTO 礼物记录DTO
 type GiftRecordDTO struct {
-	ID           int64     `json:"id"`
-	FromUserID   int64     `json:"fromUserId"`
+	ID           int       `json:"id"`
+	FromUserID   int       `json:"fromUserId"`
 	FromNickname string    `json:"fromNickname"`
 	ItemID       int       `json:"itemId"`
 	ItemName     string    `json:"itemName"`
@@ -64,19 +64,19 @@ type GiftRecordDTO struct {
 
 // CreateTradeRequest 创建交易请求
 type CreateTradeRequest struct {
-	ToUserID        int64 `json:"toUserId" binding:"required"`
-	OfferItemID     int   `json:"offerItemId" binding:"required"`
-	OfferQuantity   int   `json:"offerQuantity" binding:"required,min=1"`
-	RequestItemID   int   `json:"requestItemId" binding:"required"`
-	RequestQuantity int   `json:"requestQuantity" binding:"required,min=1"`
+	ToUserID        int `json:"toUserId" binding:"required"`
+	OfferItemID     int `json:"offerItemId" binding:"required"`
+	OfferQuantity   int `json:"offerQuantity" binding:"required,min=1"`
+	RequestItemID   int `json:"requestItemId" binding:"required"`
+	RequestQuantity int `json:"requestQuantity" binding:"required,min=1"`
 }
 
 // TradeDTO 交易DTO
 type TradeDTO struct {
-	ID              int64     `json:"id"`
-	FromUserID      int64     `json:"fromUserId"`
+	ID              int       `json:"id"`
+	FromUserID      int       `json:"fromUserId"`
 	FromNickname    string    `json:"fromNickname"`
-	ToUserID        int64     `json:"toUserId"`
+	ToUserID        int       `json:"toUserId"`
 	ToNickname      string    `json:"toNickname"`
 	OfferItemName   string    `json:"offerItemName"`
 	OfferQuantity   int       `json:"offerQuantity"`
@@ -97,7 +97,7 @@ type VisitResponse struct {
 
 // PetVisitDTO 拜访时的宠物信息
 type PetVisitDTO struct {
-	ID        int64  `json:"id"`
+	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	Level     int    `json:"level"`
 	Stage     string `json:"stage"`

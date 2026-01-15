@@ -26,9 +26,9 @@ type Service struct {
 
 // CacheService 缓存服务接口（在应用层定义，基础设施层实现）
 type CacheService interface {
-	GetPetDetail(ctx context.Context, userID int64) (*PetDetailDTO, error)
-	SetPetDetail(ctx context.Context, userID int64, pet *PetDetailDTO, ttl time.Duration) error
-	DeletePetDetail(ctx context.Context, userID int64) error
+	GetPetDetail(ctx context.Context, userID int) (*PetDetailDTO, error)
+	SetPetDetail(ctx context.Context, userID int, pet *PetDetailDTO, ttl time.Duration) error
+	DeletePetDetail(ctx context.Context, userID int) error
 }
 
 // NewService 创建宠物应用服务
@@ -64,7 +64,7 @@ func NewService(
 // ============================================================
 
 // GetPetDetail 获取用户的宠物详情
-func (s *Service) GetPetDetail(ctx context.Context, userID int64) (*PetDetailDTO, error) {
+func (s *Service) GetPetDetail(ctx context.Context, userID int) (*PetDetailDTO, error) {
 	// 1. 尝试从缓存获取
 	if s.cache != nil {
 		cached, err := s.cache.GetPetDetail(ctx, userID)
@@ -113,7 +113,7 @@ func (s *Service) GetPetDetail(ctx context.Context, userID int64) (*PetDetailDTO
 // ============================================================
 
 // FeedPet 喂食宠物
-func (s *Service) FeedPet(ctx context.Context, userID int64, req FeedPetRequest) (*FeedPetResponse, error) {
+func (s *Service) FeedPet(ctx context.Context, userID int, req FeedPetRequest) (*FeedPetResponse, error) {
 	var response *FeedPetResponse
 	var events []any
 
@@ -200,7 +200,7 @@ func (s *Service) FeedPet(ctx context.Context, userID int64, req FeedPetRequest)
 }
 
 // CreatePet 创建宠物
-func (s *Service) CreatePet(ctx context.Context, userID int64, req CreatePetRequest) (*CreatePetResponse, error) {
+func (s *Service) CreatePet(ctx context.Context, userID int, req CreatePetRequest) (*CreatePetResponse, error) {
 	var dto *PetDetailDTO
 
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
@@ -242,7 +242,7 @@ func (s *Service) CreatePet(ctx context.Context, userID int64, req CreatePetRequ
 }
 
 // PlayWithPet 和宠物玩耍
-func (s *Service) PlayWithPet(ctx context.Context, userID int64) (*PlayPetResponse, error) {
+func (s *Service) PlayWithPet(ctx context.Context, userID int) (*PlayPetResponse, error) {
 	var response *PlayPetResponse
 
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
@@ -284,7 +284,7 @@ func (s *Service) PlayWithPet(ctx context.Context, userID int64) (*PlayPetRespon
 }
 
 // CleanPet 清洁宠物
-func (s *Service) CleanPet(ctx context.Context, userID int64) (*CleanPetResponse, error) {
+func (s *Service) CleanPet(ctx context.Context, userID int) (*CleanPetResponse, error) {
 	var response *CleanPetResponse
 
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
@@ -368,7 +368,7 @@ func (s *Service) toPetDetailDTO(p *pet.Pet) *PetDetailDTO {
 // ============================================================
 
 // BreedPets 繁殖宠物
-func (s *Service) BreedPets(ctx context.Context, userID int64, req BreedPetsRequest) (*BreedPetsResponse, error) {
+func (s *Service) BreedPets(ctx context.Context, userID int, req BreedPetsRequest) (*BreedPetsResponse, error) {
 	var response *BreedPetsResponse
 	var events []any
 
@@ -474,7 +474,7 @@ func (s *Service) BreedPets(ctx context.Context, userID int64, req BreedPetsRequ
 }
 
 // CanBreed 检查是否可以繁殖
-func (s *Service) CanBreed(ctx context.Context, userID int64, parent1ID, parent2ID int64) (*CanBreedResponse, error) {
+func (s *Service) CanBreed(ctx context.Context, userID int, parent1ID, parent2ID int) (*CanBreedResponse, error) {
 	parent1, err := s.petRepo.FindByID(ctx, parent1ID)
 	if err != nil {
 		return nil, err
@@ -547,7 +547,7 @@ func (s *Service) PredictOffspring(ctx context.Context, req PredictOffspringRequ
 // ============================================================
 
 // GetPetScore 获取宠物评分
-func (s *Service) GetPetScore(ctx context.Context, userID int64) (*GetPetScoreResponse, error) {
+func (s *Service) GetPetScore(ctx context.Context, userID int) (*GetPetScoreResponse, error) {
 	p, err := s.petRepo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err

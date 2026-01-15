@@ -28,6 +28,7 @@ func ProvideRouter(cfg *config.Config, services *ServiceSet, wsHandler *ws.Handl
 		SocialHandler:  socialHandler,
 		RankingHandler: rankingHandler,
 		JWTSecret:      cfg.JWT.Secret,
+		ServerMode:     cfg.Server.Mode, // 传递服务器模式
 	})
 
 	// 注册 WebSocket 路由

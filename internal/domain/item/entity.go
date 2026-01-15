@@ -34,15 +34,15 @@ type ItemDefinition struct {
 // UserItem 用户道具（实体）
 // 表示用户背包中的道具
 type UserItem struct {
-	ID        int64
-	UserID    int64
+	ID        int
+	UserID    int
 	ItemID    int      // 对应 ItemDefinition.ID
 	Quantity  int      // 数量
 	CreatedAt time.Time
 }
 
 // NewUserItem 创建用户道具
-func NewUserItem(userID int64, itemID int, quantity int) *UserItem {
+func NewUserItem(userID int, itemID int, quantity int) *UserItem {
 	return &UserItem{
 		UserID:    userID,
 		ItemID:    itemID,
@@ -78,8 +78,8 @@ func (i *UserItem) IsEmpty() bool {
 // PetDecoration 宠物装饰（实体）
 // 宠物当前穿戴的装饰品
 type PetDecoration struct {
-	ID         int64
-	PetID      int64
+	ID         int
+	PetID      int
 	ItemID     int    // 装饰品道具ID
 	Slot       string // 槽位: head, body, accessory
 	EquippedAt time.Time

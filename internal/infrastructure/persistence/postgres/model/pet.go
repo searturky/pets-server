@@ -5,10 +5,9 @@ import "time"
 
 // Pet 宠物表
 type Pet struct {
-	ID     int64  `gorm:"primaryKey;autoIncrement"`
-	UserID int64  `gorm:"index;not null"` // 一个用户可以有多只宠物
-
-	Name string `gorm:"type:varchar(32);not null"`
+	BaseModel
+	UserID int `gorm:"index;not null"` // 一个用户可以有多只宠物
+	Name   string `gorm:"type:varchar(32);not null"`
 
 	// 物种和性别
 	SpeciesID int   `gorm:"column:species_id;index;not null;default:101"` // 物种ID，默认为猫
@@ -57,8 +56,8 @@ type Pet struct {
 	Energy      int16 `gorm:"default:100"`
 
 	// 繁衍相关
-	Parent1ID   *int64     `gorm:"column:parent1_id;index"` // 父方ID (可为空)
-	Parent2ID   *int64     `gorm:"column:parent2_id;index"` // 母方ID (可为空)
+	Parent1ID   *int       `gorm:"column:parent1_id;index"` // 父方ID (可为空)
+	Parent2ID   *int       `gorm:"column:parent2_id;index"` // 母方ID (可为空)
 	Generation  int        `gorm:"column:generation;default:0"`
 	LastBreedAt *time.Time `gorm:"column:last_breed_at"`
 
@@ -67,8 +66,6 @@ type Pet struct {
 	LastPlayedAt  time.Time `gorm:"column:last_played_at"`
 	LastCleanedAt time.Time `gorm:"column:last_cleaned_at"`
 	BornAt        time.Time `gorm:"column:born_at"`
-	CreatedAt     time.Time `gorm:"autoCreateTime"`
-	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
 }
 
 // TableName 表名
@@ -78,7 +75,7 @@ func (Pet) TableName() string {
 
 // SpeciesDefinition 物种定义表
 type SpeciesDefinition struct {
-	ID           int    `gorm:"primaryKey"`
+	BaseModel
 	Name         string `gorm:"type:varchar(32);not null"`
 	Category     string `gorm:"type:varchar(16);not null"` // mammal/avian/fish/reptile/fantasy/elemental
 	BaseParts    string `gorm:"type:jsonb;not null"`       // JSON: ["body", "eye", "pattern"]
@@ -88,7 +85,6 @@ type SpeciesDefinition struct {
 	GenderRules  string `gorm:"type:jsonb;not null"`       // JSON: {"allowed": [1,2], "ratio": {"1":50,"2":50}, "can_self_breed": false}
 	BreedRules   string `gorm:"type:jsonb"`                // JSON: 繁殖规则
 	IsHidden     bool   `gorm:"default:false"`             // 是否为隐藏物种
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
 }
 
 // TableName 表名
@@ -98,10 +94,10 @@ func (SpeciesDefinition) TableName() string {
 
 // SpeciesFusion 物种融合表
 type SpeciesFusion struct {
-	ID              int `gorm:"primaryKey;autoIncrement"`
-	SpeciesAID      int `gorm:"column:species_a_id;not null;index"`
-	SpeciesBID      int `gorm:"column:species_b_id;not null;index"`
-	ResultSpeciesID int `gorm:"column:result_species_id;not null"`
+	BaseModel
+	SpeciesAID       int `gorm:"column:species_a_id;not null;index"`
+	SpeciesBID       int `gorm:"column:species_b_id;not null;index"`
+	ResultSpeciesID  int `gorm:"column:result_species_id;not null"`
 	TriggerThreshold int `gorm:"column:trigger_threshold;default:200"`
 }
 
@@ -112,7 +108,7 @@ func (SpeciesFusion) TableName() string {
 
 // SkillDefinition 技能定义表
 type SkillDefinition struct {
-	ID          int    `gorm:"primaryKey"`
+	BaseModel
 	Name        string `gorm:"type:varchar(32);not null"`
 	Description string `gorm:"type:text"`
 	EffectType  string `gorm:"column:effect_type;type:varchar(32)"`

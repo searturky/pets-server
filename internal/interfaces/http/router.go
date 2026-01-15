@@ -1,11 +1,35 @@
 // Package http HTTP 路由配置
+//
+// @title           宠物养成游戏 API
+// @version         1.0
+// @description     宠物养成游戏后端 REST API 文档
+// @termsOfService  http://swagger.io/terms/
+//
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+//
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+//
+// @host      localhost:8080
+// @BasePath  /api/v1
+//
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 package http
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
+	docs "pets-server/internal/interfaces/http/docs"
 	"pets-server/internal/interfaces/http/handler"
 	"pets-server/internal/interfaces/http/middleware"
+	"pets-server/internal/pkg/config"
 )
 
 const (
@@ -24,6 +48,7 @@ type RouterConfig struct {
 	SocialHandler  *handler.SocialHandler
 	RankingHandler *handler.RankingHandler
 	JWTSecret      string
+	ServerMode     config.ServerMode // 服务器模式，用于控制 Swagger 开关
 }
 
 // NewRouter 创建路由
@@ -35,6 +60,20 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 
 	// 健康检查（不带版本号）
 	router.GET("/health", healthCheck)
+
+	// Swagger 文档路由（仅在开发环境：debug 模式）
+	if cfg.ServerMode == config.ModeDebug {
+		docs.SwaggerInfov1.Title = "宠物养成游戏 API 文档"
+		docs.SwaggerInfov1.Description = "宠物养成游戏后端 REST API"
+		docs.SwaggerInfov1.Version = "1.0"
+		docs.SwaggerInfov1.BasePath = "/api/v1"
+		docs.SwaggerInfov1.Schemes = []string{"http", "https"}
+
+		router.GET("/swagger/v1/*any", ginSwagger.WrapHandler(
+			swaggerFiles.Handler,
+			ginSwagger.InstanceName("v1"),
+		))
+	}
 
 	// V1 API 路由组
 	v1 := router.Group(APIBasePath + "/" + APIVersion)

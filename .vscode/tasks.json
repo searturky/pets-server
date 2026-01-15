@@ -1,13 +1,20 @@
 {
 	"version": "2.0.0",
-	"tasks": [{
-        "label": "build-docs",
-        "command": "PATH=$PATH:$HOME/go/bin make doc", // Could be any other shell command
-        "type": "shell",
-    },
-    {
-        "label": "wire",
-        "command": "PATH=$PATH:$HOME/go/bin make wire",
-        "type": "shell",
-    }],
+	"tasks": [
+        {
+            "label": "wire and swag",
+            "dependsOn": ["wire", "swag"],
+            "dependsOrder": "sequence"  // 或 "parallel" 并行执行
+        },
+        {
+            "label": "wire",
+            "type": "shell",
+            "command": "make wire"
+        },
+        {
+            "label": "swag",
+            "type": "shell",
+            "command": "make doc"
+        }
+    ]
 }

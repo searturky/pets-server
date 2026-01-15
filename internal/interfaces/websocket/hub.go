@@ -10,7 +10,7 @@ import (
 // 管理所有客户端连接
 type Hub struct {
 	// 已注册的客户端
-	clients map[int64]*Client
+	clients map[int]*Client
 
 	// 注册请求通道
 	register chan *Client
@@ -27,7 +27,7 @@ type Hub struct {
 
 // Message 消息结构
 type Message struct {
-	UserID  int64       `json:"userId,omitempty"` // 目标用户ID（0表示广播）
+	UserID  int         `json:"userId,omitempty"` // 目标用户ID（0表示广播）
 	Type    string      `json:"type"`             // 消息类型
 	Payload interface{} `json:"payload"`          // 消息内容
 }
@@ -35,7 +35,7 @@ type Message struct {
 // NewHub 创建 Hub
 func NewHub() *Hub {
 	return &Hub{
-		clients:    make(map[int64]*Client),
+		clients:    make(map[int]*Client),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		broadcast:  make(chan *Message),
@@ -92,7 +92,7 @@ func (h *Hub) Run() {
 }
 
 // SendToUser 发送消息给特定用户
-func (h *Hub) SendToUser(userID int64, msgType string, payload interface{}) {
+func (h *Hub) SendToUser(userID int, msgType string, payload interface{}) {
 	h.broadcast <- &Message{
 		UserID:  userID,
 		Type:    msgType,
@@ -110,7 +110,7 @@ func (h *Hub) Broadcast(msgType string, payload interface{}) {
 }
 
 // IsOnline 检查用户是否在线
-func (h *Hub) IsOnline(userID int64) bool {
+func (h *Hub) IsOnline(userID int) bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	_, ok := h.clients[userID]

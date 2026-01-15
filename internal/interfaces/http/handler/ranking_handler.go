@@ -27,7 +27,19 @@ func (h *RankingHandler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 // GetRanking 获取排行榜
-// GET /api/ranking?type=pet_level&offset=0&limit=20
+// @Summary      获取排行榜
+// @Description  获取排行榜数据，支持宠物等级、成就数量、亲密度等类型
+// @Tags         ranking
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Param        type query string true "排行榜类型" Enums(pet_level, achievement, intimacy)
+// @Param        offset query int false "偏移量" default(0)
+// @Param        limit query int false "数量限制" default(20)
+// @Success      200 {object} response.Response{data=ranking.RankingResponse} "获取成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /ranking [get]
 func (h *RankingHandler) GetRanking(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 

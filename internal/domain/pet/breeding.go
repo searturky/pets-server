@@ -25,7 +25,7 @@ type BreedingRequest struct {
 	Parent1   *Pet   // 父方
 	Parent2   *Pet   // 母方 (分裂繁殖时为nil)
 	ChildName string // 子代名称
-	OwnerID   int64  // 子代所有者ID
+	OwnerID   int    // 子代所有者ID
 }
 
 // BreedingResult 繁殖结果

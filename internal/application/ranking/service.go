@@ -12,15 +12,15 @@ type RankingStore interface {
 	GetRanking(ctx context.Context, rankType string, offset, limit int) ([]RankEntry, error)
 
 	// GetUserRank 获取用户排名
-	GetUserRank(ctx context.Context, rankType string, userID int64) (rank int, score int, err error)
+	GetUserRank(ctx context.Context, rankType string, userID int) (rank int, score int, err error)
 
 	// UpdateScore 更新用户分数
-	UpdateScore(ctx context.Context, rankType string, userID int64, score int) error
+	UpdateScore(ctx context.Context, rankType string, userID int, score int) error
 }
 
 // RankEntry 排行条目
 type RankEntry struct {
-	UserID int64
+	UserID int
 	Score  int
 }
 
@@ -35,7 +35,7 @@ func NewService(store RankingStore) *Service {
 }
 
 // GetRanking 获取排行榜
-func (s *Service) GetRanking(ctx context.Context, userID int64, req RankingRequest) (*RankingResponse, error) {
+func (s *Service) GetRanking(ctx context.Context, userID int, req RankingRequest) (*RankingResponse, error) {
 	if req.Limit <= 0 {
 		req.Limit = 20
 	}
@@ -79,12 +79,12 @@ func (s *Service) GetRanking(ctx context.Context, userID int64, req RankingReque
 }
 
 // UpdatePetLevelRank 更新宠物等级排行
-func (s *Service) UpdatePetLevelRank(ctx context.Context, userID int64, level int) error {
+func (s *Service) UpdatePetLevelRank(ctx context.Context, userID int, level int) error {
 	return s.store.UpdateScore(ctx, string(RankTypePetLevel), userID, level)
 }
 
 // UpdateAchievementRank 更新成就排行
-func (s *Service) UpdateAchievementRank(ctx context.Context, userID int64, count int) error {
+func (s *Service) UpdateAchievementRank(ctx context.Context, userID int, count int) error {
 	return s.store.UpdateScore(ctx, string(RankTypeAchievement), userID, count)
 }
 

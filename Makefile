@@ -49,6 +49,12 @@ install:
 wire:
 	go tool wire ./cmd/server/...
 
+# http://localhost:8080/swagger/v1/index.html
+doc: doc-v1
+
+doc-v1:
+	cd internal/interfaces/http && go tool swag init --parseDependency --parseInternal -g router.go -dir ./ --instanceName v1
+
 # 生成代码（如protobuf等）
 generate:
 	$(GO) generate ./...

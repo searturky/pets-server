@@ -44,14 +44,14 @@ type AchievementDefinition struct {
 
 // UserAchievement 用户成就（实体）
 type UserAchievement struct {
-	ID            int64
-	UserID        int64
+	ID            int
+	UserID        int
 	AchievementID int // 对应 AchievementDefinition.ID
 	UnlockedAt    time.Time
 }
 
 // NewUserAchievement 创建用户成就
-func NewUserAchievement(userID int64, achievementID int) *UserAchievement {
+func NewUserAchievement(userID int, achievementID int) *UserAchievement {
 	return &UserAchievement{
 		UserID:        userID,
 		AchievementID: achievementID,
@@ -61,12 +61,12 @@ func NewUserAchievement(userID int64, achievementID int) *UserAchievement {
 
 // AchievementUnlockedEvent 成就解锁事件
 type AchievementUnlockedEvent struct {
-	UserID        int64     `json:"user_id"`
-	AchievementID int       `json:"achievement_id"`
-	Name          string    `json:"name"`
-	RewardCoins   int       `json:"reward_coins"`
-	RewardDiamonds int      `json:"reward_diamonds"`
-	Timestamp     time.Time `json:"timestamp"`
+	UserID         int       `json:"user_id"`
+	AchievementID  int       `json:"achievement_id"`
+	Name           string    `json:"name"`
+	RewardCoins    int       `json:"reward_coins"`
+	RewardDiamonds int       `json:"reward_diamonds"`
+	Timestamp      time.Time `json:"timestamp"`
 }
 
 func (e AchievementUnlockedEvent) EventName() string { return "achievement.unlocked" }

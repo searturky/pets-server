@@ -23,7 +23,7 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 }
 
 // FindByID 根据ID查找用户
-func (r *UserRepository) FindByID(ctx context.Context, id int64) (*user.User, error) {
+func (r *UserRepository) FindByID(ctx context.Context, id int) (*user.User, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var m model.User
@@ -82,7 +82,7 @@ func (r *UserRepository) Save(ctx context.Context, u *user.User) error {
 }
 
 // Delete 删除用户
-func (r *UserRepository) Delete(ctx context.Context, id int64) error {
+func (r *UserRepository) Delete(ctx context.Context, id int) error {
 	db := postgres.GetTx(ctx, r.db)
 	return db.Delete(&model.User{}, id).Error
 }
@@ -106,8 +106,7 @@ func (r *UserRepository) toDomain(m *model.User) *user.User {
 }
 
 func (r *UserRepository) toModel(u *user.User) *model.User {
-	return &model.User{
-		ID:          u.ID,
+	m := &model.User{
 		Username:    u.Username,
 		Password:    u.Password,
 		OpenID:      u.OpenID,
@@ -116,8 +115,8 @@ func (r *UserRepository) toModel(u *user.User) *model.User {
 		AvatarURL:   u.AvatarURL,
 		Coins:       u.Coins,
 		Diamonds:    u.Diamonds,
-		CreatedAt:   u.CreatedAt,
 		LastLoginAt: u.LastLoginAt,
 	}
+	m.ID = u.ID
+	return m
 }
-

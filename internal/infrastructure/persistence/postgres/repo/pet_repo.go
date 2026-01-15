@@ -24,7 +24,7 @@ func NewPetRepository(db *gorm.DB) *PetRepository {
 }
 
 // FindByID 根据ID查找宠物
-func (r *PetRepository) FindByID(ctx context.Context, id int64) (*pet.Pet, error) {
+func (r *PetRepository) FindByID(ctx context.Context, id int) (*pet.Pet, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var m model.Pet
@@ -39,7 +39,7 @@ func (r *PetRepository) FindByID(ctx context.Context, id int64) (*pet.Pet, error
 }
 
 // FindByUserID 根据用户ID查找宠物
-func (r *PetRepository) FindByUserID(ctx context.Context, userID int64) (*pet.Pet, error) {
+func (r *PetRepository) FindByUserID(ctx context.Context, userID int) (*pet.Pet, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var m model.Pet
@@ -54,7 +54,7 @@ func (r *PetRepository) FindByUserID(ctx context.Context, userID int64) (*pet.Pe
 }
 
 // FindByUserIDAll 根据用户ID查找所有宠物
-func (r *PetRepository) FindByUserIDAll(ctx context.Context, userID int64) ([]*pet.Pet, error) {
+func (r *PetRepository) FindByUserIDAll(ctx context.Context, userID int) ([]*pet.Pet, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.Pet
@@ -85,7 +85,7 @@ func (r *PetRepository) Save(ctx context.Context, p *pet.Pet) error {
 }
 
 // Delete 删除宠物
-func (r *PetRepository) Delete(ctx context.Context, id int64) error {
+func (r *PetRepository) Delete(ctx context.Context, id int) error {
 	db := postgres.GetTx(ctx, r.db)
 	return db.Delete(&model.Pet{}, id).Error
 }
@@ -125,7 +125,7 @@ func (r *PetRepository) FindBySpecies(ctx context.Context, speciesID int, offset
 }
 
 // FindByParent 根据父母ID查找子代
-func (r *PetRepository) FindByParent(ctx context.Context, parentID int64) ([]*pet.Pet, error) {
+func (r *PetRepository) FindByParent(ctx context.Context, parentID int) ([]*pet.Pet, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.Pet
@@ -142,7 +142,7 @@ func (r *PetRepository) FindByParent(ctx context.Context, parentID int64) ([]*pe
 }
 
 // CountAll 统计宠物总数
-func (r *PetRepository) CountAll(ctx context.Context) (int64, error) {
+func (r *PetRepository) CountAll(ctx context.Context) (int, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var count int64
@@ -150,7 +150,7 @@ func (r *PetRepository) CountAll(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 
-	return count, nil
+	return int(count), nil
 }
 
 // --- 模型转换 ---
@@ -223,8 +223,7 @@ func (r *PetRepository) toModel(p *pet.Pet) *model.Pet {
 	// 序列化物种特有外观
 	specialAppearanceJSON, _ := json.Marshal(p.SpecialAppearance)
 
-	return &model.Pet{
-		ID:                p.ID,
+	m := &model.Pet{
 		UserID:            p.UserID,
 		Name:              p.Name,
 		SpeciesID:         int(p.SpeciesID),
@@ -265,6 +264,7 @@ func (r *PetRepository) toModel(p *pet.Pet) *model.Pet {
 		LastPlayedAt:      p.LastPlayedAt,
 		LastCleanedAt:     p.LastCleanedAt,
 		BornAt:            p.BornAt,
-		CreatedAt:         p.CreatedAt,
 	}
+	m.ID = p.ID
+	return m
 }

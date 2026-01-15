@@ -34,7 +34,17 @@ func (h *AuthHandler) RegisterAuthRoutes(r *gin.RouterGroup) {
 }
 
 // Login 账号密码登录
-// POST /api/v1/auth/login
+// @Summary      账号密码登录
+// @Description  使用用户名和密码登录获取 JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body auth.LoginRequest true "登录请求"
+// @Success      200 {object} response.Response{data=auth.LoginResponse} "登录成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      401 {object} response.Response "用户名或密码错误"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req auth.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -52,7 +62,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Register 账号注册
-// POST /api/v1/auth/register
+// @Summary      用户注册
+// @Description  注册新用户账号
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body auth.RegisterRequest true "注册请求"
+// @Success      200 {object} response.Response{data=auth.LoginResponse} "注册成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      409 {object} response.Response "用户名已存在"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req auth.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -70,7 +90,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 // WxLogin 微信登录
-// POST /api/v1/auth/wx-login
+// @Summary      微信登录
+// @Description  通过微信 code 登录获取 JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body auth.WxLoginRequest true "微信登录请求"
+// @Success      200 {object} response.Response{data=auth.WxLoginResponse} "登录成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /auth/wx-login [post]
 func (h *AuthHandler) WxLogin(c *gin.Context) {
 	var req auth.WxLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -88,7 +117,16 @@ func (h *AuthHandler) WxLogin(c *gin.Context) {
 }
 
 // GetCurrentUser 获取当前用户信息
-// GET /api/v1/auth/me
+// @Summary      获取当前用户信息
+// @Description  获取当前登录用户的详细信息
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200 {object} response.Response{data=auth.UserInfo} "获取成功"
+// @Failure      401 {object} response.Response "未授权"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /auth/me [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 

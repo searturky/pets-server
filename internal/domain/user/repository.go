@@ -8,7 +8,7 @@ import "context"
 // 定义在领域层，由基础设施层实现
 type Repository interface {
 	// FindByID 根据ID查找用户
-	FindByID(ctx context.Context, id int64) (*User, error)
+	FindByID(ctx context.Context, id int) (*User, error)
 
 	// FindByUsername 根据用户名查找用户
 	FindByUsername(ctx context.Context, username string) (*User, error)
@@ -20,6 +20,6 @@ type Repository interface {
 	Save(ctx context.Context, user *User) error
 
 	// Delete 删除用户
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int) error
 }
 

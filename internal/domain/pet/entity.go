@@ -52,8 +52,8 @@ func (f FoodType) GetHungerRestore() int {
 
 // Pet 宠物实体（聚合根）
 type Pet struct {
-	ID     int64
-	UserID int64
+	ID     int
+	UserID int
 	Name   string
 
 	// 物种和性别
@@ -79,8 +79,8 @@ type Pet struct {
 	Energy      int
 
 	// 繁衍相关
-	Parent1ID   *int64     // 父方ID (可为空)
-	Parent2ID   *int64     // 母方ID (可为空)
+	Parent1ID   *int       // 父方ID (可为空)
+	Parent2ID   *int       // 母方ID (可为空)
 	Generation  int        // 代数
 	LastBreedAt *time.Time // 上次繁殖时间
 
@@ -97,12 +97,12 @@ type Pet struct {
 
 // NewPet 创建新宠物（从蛋开始）
 // 使用默认物种（猫）
-func NewPet(userID int64, name string) *Pet {
+func NewPet(userID int, name string) *Pet {
 	return NewPetWithSpecies(userID, name, SpeciesCat, nil)
 }
 
 // NewPetWithSpecies 创建指定物种的新宠物
-func NewPetWithSpecies(userID int64, name string, speciesID SpeciesID, genderRule *GenderRule) *Pet {
+func NewPetWithSpecies(userID int, name string, speciesID SpeciesID, genderRule *GenderRule) *Pet {
 	gene := GenerateGene()
 	now := time.Now()
 
@@ -138,7 +138,7 @@ func NewPetWithSpecies(userID int64, name string, speciesID SpeciesID, genderRul
 }
 
 // NewPetFromBreeding 从繁殖创建新宠物
-func NewPetFromBreeding(userID int64, name string, speciesID SpeciesID, gene Gene, gender Gender, parent1ID, parent2ID int64, generation int) *Pet {
+func NewPetFromBreeding(userID int, name string, speciesID SpeciesID, gene Gene, gender Gender, parent1ID, parent2ID int, generation int) *Pet {
 	now := time.Now()
 
 	return &Pet{

@@ -28,7 +28,7 @@ type RankingResponse struct {
 // RankItemDTO 排行项DTO
 type RankItemDTO struct {
 	Rank      int    `json:"rank"`
-	UserID    int64  `json:"userId"`
+	UserID    int    `json:"userId"`
 	Nickname  string `json:"nickname"`
 	AvatarURL string `json:"avatarUrl"`
 	Score     int    `json:"score"`

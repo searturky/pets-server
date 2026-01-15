@@ -42,7 +42,7 @@ func NewService(
 // --- 好友功能 ---
 
 // SendFriendRequest 发送好友申请
-func (s *Service) SendFriendRequest(ctx context.Context, userID int64, req AddFriendRequest) error {
+func (s *Service) SendFriendRequest(ctx context.Context, userID int, req AddFriendRequest) error {
 	if userID == req.FriendID {
 		return social.ErrCannotAddSelf
 	}
@@ -68,7 +68,7 @@ func (s *Service) SendFriendRequest(ctx context.Context, userID int64, req AddFr
 }
 
 // AcceptFriendRequest 接受好友申请
-func (s *Service) AcceptFriendRequest(ctx context.Context, userID int64, friendshipID int64) error {
+func (s *Service) AcceptFriendRequest(ctx context.Context, userID int, friendshipID int) error {
 	return s.uow.Do(ctx, func(txCtx context.Context) error {
 		friendship, err := s.friendRepo.FindByID(txCtx, friendshipID)
 		if err != nil {
@@ -89,7 +89,7 @@ func (s *Service) AcceptFriendRequest(ctx context.Context, userID int64, friends
 }
 
 // GetFriendList 获取好友列表
-func (s *Service) GetFriendList(ctx context.Context, userID int64) (*FriendListResponse, error) {
+func (s *Service) GetFriendList(ctx context.Context, userID int) (*FriendListResponse, error) {
 	friendships, err := s.friendRepo.FindFriends(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -114,7 +114,7 @@ func (s *Service) GetFriendList(ctx context.Context, userID int64) (*FriendListR
 // --- 礼物功能 ---
 
 // SendGift 发送礼物
-func (s *Service) SendGift(ctx context.Context, userID int64, req SendGiftRequest) error {
+func (s *Service) SendGift(ctx context.Context, userID int, req SendGiftRequest) error {
 	// TODO: 完整实现需要：
 	// 1. 验证是好友关系
 	// 2. 扣除发送者道具
@@ -131,7 +131,7 @@ func (s *Service) SendGift(ctx context.Context, userID int64, req SendGiftReques
 }
 
 // GetReceivedGifts 获取收到的礼物
-func (s *Service) GetReceivedGifts(ctx context.Context, userID int64) ([]GiftRecordDTO, error) {
+func (s *Service) GetReceivedGifts(ctx context.Context, userID int) ([]GiftRecordDTO, error) {
 	gifts, err := s.giftRepo.FindByReceiver(ctx, userID, false)
 	if err != nil {
 		return nil, err
@@ -157,4 +157,3 @@ func (s *Service) GetReceivedGifts(ctx context.Context, userID int64) ([]GiftRec
 var (
 	ErrNotAllowed = errors.New("无权进行此操作")
 )
-

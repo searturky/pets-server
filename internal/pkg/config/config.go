@@ -7,6 +7,15 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ServerMode 服务器运行模式
+type ServerMode string
+
+const (
+	ModeDebug   ServerMode = "debug"
+	ModeRelease ServerMode = "release"
+	ModeTest    ServerMode = "test"
+)
+
 // Config 应用配置
 type Config struct {
 	Server   ServerConfig   `mapstructure:"server"`
@@ -20,9 +29,9 @@ type Config struct {
 
 // ServerConfig 服务器配置
 type ServerConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
+	Host string     `mapstructure:"host"`
+	Port int        `mapstructure:"port"`
+	Mode ServerMode `mapstructure:"mode"`
 }
 
 // PostgresConfig PostgreSQL 配置
@@ -68,10 +77,28 @@ type WechatConfig struct {
 	AppSecret string `mapstructure:"app_secret"`
 }
 
+// LogLevel 日志级别
+type LogLevel string
+
+const (
+	LogLevelDebug LogLevel = "debug"
+	LogLevelInfo  LogLevel = "info"
+	LogLevelWarn  LogLevel = "warn"
+	LogLevelError LogLevel = "error"
+)
+
+// LogFormat 日志格式
+type LogFormat string
+
+const (
+	LogFormatJSON LogFormat = "json"
+	LogFormatText LogFormat = "text"
+)
+
 // LogConfig 日志配置
 type LogConfig struct {
-	Level  string `mapstructure:"level"`
-	Format string `mapstructure:"format"`
+	Level  LogLevel  `mapstructure:"level"`
+	Format LogFormat `mapstructure:"format"`
 }
 
 // Load 加载配置

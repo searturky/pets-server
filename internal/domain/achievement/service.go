@@ -18,7 +18,7 @@ func NewDomainService(repo Repository) *DomainService {
 // 返回新解锁的成就列表
 func (s *DomainService) CheckAndUnlock(
 	ctx context.Context,
-	userID int64,
+	userID int,
 	conditionType ConditionType,
 	currentValue int,
 ) ([]*UserAchievement, error) {

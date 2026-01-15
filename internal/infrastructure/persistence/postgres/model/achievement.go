@@ -5,7 +5,7 @@ import "time"
 
 // AchievementDefinition 成就定义表
 type AchievementDefinition struct {
-	ID             int    `gorm:"primaryKey"`
+	BaseModel
 	Name           string `gorm:"type:varchar(64);not null"`
 	Description    string `gorm:"type:text"`
 	Category       string `gorm:"type:varchar(32)"` // pet, social, item, login
@@ -23,8 +23,8 @@ func (AchievementDefinition) TableName() string {
 
 // UserAchievement 用户成就表
 type UserAchievement struct {
-	ID            int64     `gorm:"primaryKey;autoIncrement"`
-	UserID        int64     `gorm:"column:user_id;index;not null"`
+	BaseModel
+	UserID        int       `gorm:"column:user_id;index;not null"`
 	AchievementID int       `gorm:"column:achievement_id;not null"`
 	UnlockedAt    time.Time `gorm:"column:unlocked_at;autoCreateTime"`
 }
@@ -33,4 +33,3 @@ type UserAchievement struct {
 func (UserAchievement) TableName() string {
 	return "user_achievements"
 }
-

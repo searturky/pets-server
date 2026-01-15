@@ -23,7 +23,7 @@ func NewAchievementRepository(db *gorm.DB) *AchievementRepository {
 }
 
 // FindByUserID 获取用户所有成就
-func (r *AchievementRepository) FindByUserID(ctx context.Context, userID int64) ([]*achievement.UserAchievement, error) {
+func (r *AchievementRepository) FindByUserID(ctx context.Context, userID int) ([]*achievement.UserAchievement, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var models []model.UserAchievement
@@ -45,7 +45,7 @@ func (r *AchievementRepository) FindByUserID(ctx context.Context, userID int64) 
 }
 
 // HasAchievement 检查用户是否已获得某成就
-func (r *AchievementRepository) HasAchievement(ctx context.Context, userID int64, achievementID int) (bool, error) {
+func (r *AchievementRepository) HasAchievement(ctx context.Context, userID int, achievementID int) (bool, error) {
 	db := postgres.GetTx(ctx, r.db)
 
 	var count int64
@@ -63,11 +63,10 @@ func (r *AchievementRepository) Save(ctx context.Context, a *achievement.UserAch
 	db := postgres.GetTx(ctx, r.db)
 
 	m := &model.UserAchievement{
-		ID:            a.ID,
 		UserID:        a.UserID,
 		AchievementID: a.AchievementID,
-		UnlockedAt:    a.UnlockedAt,
 	}
+	m.ID = int(a.ID)
 
 	if err := db.Create(m).Error; err != nil {
 		return err
@@ -128,7 +127,7 @@ func (r *AchievementRepository) GetByCategory(ctx context.Context, category achi
 
 func (r *AchievementRepository) definitionToDomain(m *model.AchievementDefinition) *achievement.AchievementDefinition {
 	return &achievement.AchievementDefinition{
-		ID:             m.ID,
+		ID:             int(m.ID),
 		Name:           m.Name,
 		Description:    m.Description,
 		Category:       achievement.AchievementCategory(m.Category),

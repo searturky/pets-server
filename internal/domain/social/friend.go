@@ -18,9 +18,9 @@ const (
 
 // Friendship 好友关系实体
 type Friendship struct {
-	ID          int64
-	UserID      int64        // 发起者
-	FriendID    int64        // 接收者
+	ID          int
+	UserID      int          // 发起者
+	FriendID    int          // 接收者
 	Status      FriendStatus // 状态
 	Intimacy    int          // 亲密度 0-100
 	CreatedAt   time.Time    // 申请时间
@@ -28,7 +28,7 @@ type Friendship struct {
 }
 
 // NewFriendRequest 创建好友申请
-func NewFriendRequest(userID, friendID int64) *Friendship {
+func NewFriendRequest(userID, friendID int) *Friendship {
 	return &Friendship{
 		UserID:    userID,
 		FriendID:  friendID,

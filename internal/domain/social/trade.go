@@ -19,9 +19,9 @@ const (
 
 // Trade 交易实体
 type Trade struct {
-	ID              int64
-	FromUserID      int64       // 发起者
-	ToUserID        int64       // 接收者
+	ID              int
+	FromUserID      int         // 发起者
+	ToUserID        int         // 接收者
 	OfferItemID     int         // 提供的道具ID
 	OfferQuantity   int         // 提供的数量
 	RequestItemID   int         // 请求的道具ID
@@ -32,7 +32,7 @@ type Trade struct {
 }
 
 // NewTrade 创建交易
-func NewTrade(fromUserID, toUserID int64, offerItemID, offerQty, requestItemID, requestQty int) *Trade {
+func NewTrade(fromUserID, toUserID int, offerItemID, offerQty, requestItemID, requestQty int) *Trade {
 	return &Trade{
 		FromUserID:      fromUserID,
 		ToUserID:        toUserID,

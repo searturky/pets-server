@@ -41,7 +41,7 @@ type CleanPetResponse struct {
 
 // PetDetailDTO 宠物详情DTO
 type PetDetailDTO struct {
-	ID   int64  `json:"id"`
+	ID   int    `json:"id"`
 	Name string `json:"name"`
 
 	// 外观
@@ -106,7 +106,7 @@ type StatusDTO struct {
 
 // PetSimpleDTO 宠物简要信息（用于列表、拜访等）
 type PetSimpleDTO struct {
-	ID        int64  `json:"id"`
+	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	Level     int    `json:"level"`
 	Stage     string `json:"stage"`
@@ -117,8 +117,8 @@ type PetSimpleDTO struct {
 
 // BreedPetsRequest 繁殖请求
 type BreedPetsRequest struct {
-	Parent1ID int64  `json:"parent1Id" binding:"required"` // 父母1 ID
-	Parent2ID int64  `json:"parent2Id"`                    // 父母2 ID（可选，不填为分裂繁殖）
+	Parent1ID int    `json:"parent1Id" binding:"required"` // 父母1 ID
+	Parent2ID int    `json:"parent2Id"`                    // 父母2 ID（可选，不填为分裂繁殖）
 	ChildName string `json:"childName" binding:"required"` // 后代名称
 }
 
@@ -133,9 +133,9 @@ type BreedPetsResponse struct {
 
 // PetBreedingStatusDTO 宠物繁殖状态
 type PetBreedingStatusDTO struct {
-	ID              int64 `json:"id"`
-	BreedingCount   int   `json:"breedingCount"`   // 繁殖次数
-	RemainingBreeds int   `json:"remainingBreeds"` // 剩余可繁殖次数
+	ID              int `json:"id"`
+	BreedingCount   int `json:"breedingCount"`   // 繁殖次数
+	RemainingBreeds int `json:"remainingBreeds"` // 剩余可繁殖次数
 }
 
 // CanBreedResponse 是否可繁殖响应
@@ -146,8 +146,8 @@ type CanBreedResponse struct {
 
 // PredictOffspringRequest 预测后代请求
 type PredictOffspringRequest struct {
-	Parent1ID int64 `json:"parent1Id" binding:"required"`
-	Parent2ID int64 `json:"parent2Id"`
+	Parent1ID int `json:"parent1Id" binding:"required"`
+	Parent2ID int `json:"parent2Id"`
 }
 
 // SpeciesProbabilityDTO 物种概率

@@ -37,7 +37,7 @@ func (r *RankingStore) GetRanking(ctx context.Context, rankType string, offset, 
 	entries := make([]ranking.RankEntry, len(results))
 	for i, z := range results {
 		// Member 是用户ID（存储时需要转为字符串）
-		var userID int64
+		var userID int
 		fmt.Sscanf(z.Member.(string), "%d", &userID)
 		entries[i] = ranking.RankEntry{
 			UserID: userID,
@@ -49,7 +49,7 @@ func (r *RankingStore) GetRanking(ctx context.Context, rankType string, offset, 
 }
 
 // GetUserRank 获取用户排名
-func (r *RankingStore) GetUserRank(ctx context.Context, rankType string, userID int64) (rank int, score int, err error) {
+func (r *RankingStore) GetUserRank(ctx context.Context, rankType string, userID int) (rank int, score int, err error) {
 	key := rankingKey(rankType)
 	member := fmt.Sprintf("%d", userID)
 
@@ -72,7 +72,7 @@ func (r *RankingStore) GetUserRank(ctx context.Context, rankType string, userID 
 }
 
 // UpdateScore 更新用户分数
-func (r *RankingStore) UpdateScore(ctx context.Context, rankType string, userID int64, score int) error {
+func (r *RankingStore) UpdateScore(ctx context.Context, rankType string, userID int, score int) error {
 	key := rankingKey(rankType)
 	member := fmt.Sprintf("%d", userID)
 
@@ -84,7 +84,7 @@ func (r *RankingStore) UpdateScore(ctx context.Context, rankType string, userID 
 }
 
 // RemoveFromRanking 从排行榜移除用户
-func (r *RankingStore) RemoveFromRanking(ctx context.Context, rankType string, userID int64) error {
+func (r *RankingStore) RemoveFromRanking(ctx context.Context, rankType string, userID int) error {
 	key := rankingKey(rankType)
 	member := fmt.Sprintf("%d", userID)
 
@@ -92,7 +92,8 @@ func (r *RankingStore) RemoveFromRanking(ctx context.Context, rankType string, u
 }
 
 // GetRankingCount 获取排行榜总人数
-func (r *RankingStore) GetRankingCount(ctx context.Context, rankType string) (int64, error) {
+func (r *RankingStore) GetRankingCount(ctx context.Context, rankType string) (int, error) {
 	key := rankingKey(rankType)
-	return r.client.ZCard(ctx, key).Result()
+	count, err := r.client.ZCard(ctx, key).Result()
+	return int(count), err
 }
