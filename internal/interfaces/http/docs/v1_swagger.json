@@ -1380,15 +1380,21 @@
             "properties": {
                 "nickname": {
                     "description": "昵称",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 2
                 },
                 "password": {
                     "description": "密码",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 6
                 },
                 "username": {
                     "description": "用户名",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 6
                 }
             }
         },

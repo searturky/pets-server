@@ -37,9 +37,9 @@ type LoginRequest struct {
 
 // RegisterRequest 账号注册请求
 type RegisterRequest struct {
-	Username string `json:"username" binding:"required"` // 用户名
-	Password string `json:"password" binding:"required"` // 密码
-	Nickname string `json:"nickname" binding:"required"` // 昵称
+	Username string `json:"username" binding:"required,min=6,max=20,alphanum"` // 用户名，只能包含字母、数字和下划线
+	Password string `json:"password" binding:"required,min=6,max=32"`          // 密码
+	Nickname string `json:"nickname" binding:"required,min=2,max=20"`          // 昵称
 }
 
 // LoginResponse 登录响应

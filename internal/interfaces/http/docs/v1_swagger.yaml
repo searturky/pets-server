@@ -26,12 +26,18 @@ definitions:
     properties:
       nickname:
         description: 昵称
+        maxLength: 20
+        minLength: 2
         type: string
       password:
         description: 密码
+        maxLength: 32
+        minLength: 6
         type: string
       username:
         description: 用户名
+        maxLength: 20
+        minLength: 6
         type: string
     required:
     - nickname
