@@ -42,6 +42,11 @@ type RegisterRequest struct {
 	Nickname string `json:"nickname" binding:"required,min=2,max=20"`          // 昵称
 }
 
+// KickRequest 踢下线请求
+type KickRequest struct {
+	UserID int `json:"userId" binding:"required"`
+}
+
 // LoginResponse 登录响应
 type LoginResponse struct {
 	Token    string   `json:"token"`    // JWT Token

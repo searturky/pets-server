@@ -11,6 +11,7 @@ import (
 	"pets-server/internal/domain/user"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // Service 认证应用服务
@@ -20,6 +21,7 @@ type Service struct {
 	wechatAuthFunc func(code string) (openID string, err error) // 微信认证函数
 	jwtSecret      string
 	jwtExpireHours int
+	sessionStore   SessionStore
 }
 
 // NewService 创建认证服务
@@ -29,6 +31,7 @@ func NewService(
 	wechatAuthFunc func(code string) (string, error),
 	jwtSecret string,
 	jwtExpireHours int,
+	sessionStore SessionStore,
 ) *Service {
 	return &Service{
 		userRepo:       userRepo,
@@ -36,6 +39,7 @@ func NewService(
 		wechatAuthFunc: wechatAuthFunc,
 		jwtSecret:      jwtSecret,
 		jwtExpireHours: jwtExpireHours,
+		sessionStore:   sessionStore,
 	}
 }
 
@@ -76,7 +80,7 @@ func (s *Service) WxLogin(ctx context.Context, req WxLoginRequest) (*WxLoginResp
 	}
 
 	// 3. 生成 JWT Token
-	token, err := s.generateToken(u.ID)
+	token, err := s.issueTokenWithSession(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +124,7 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 	}
 
 	// 4. 生成 JWT Token
-	token, err := s.generateToken(u.ID)
+	token, err := s.issueTokenWithSession(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +167,7 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (*LoginResp
 	}
 
 	// 4. 生成 JWT Token
-	token, err := s.generateToken(u.ID)
+	token, err := s.issueTokenWithSession(ctx, u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -196,17 +200,54 @@ func (s *Service) GetUserInfo(ctx context.Context, userID int) (*UserInfo, error
 	}, nil
 }
 
+// Logout 退出登录（清除当前会话）
+func (s *Service) Logout(ctx context.Context, userID int) error {
+	if s.sessionStore == nil {
+		return errors.New("session store not configured")
+	}
+	return s.sessionStore.DeleteCurrentSession(ctx, userID)
+}
+
+// KickUser 主动踢下线（清除指定用户会话）
+func (s *Service) KickUser(ctx context.Context, userID int) error {
+	if s.sessionStore == nil {
+		return errors.New("session store not configured")
+	}
+	return s.sessionStore.DeleteCurrentSession(ctx, userID)
+}
+
+// issueTokenWithSession 生成会话并返回 JWT Token
+func (s *Service) issueTokenWithSession(ctx context.Context, userID int) (string, error) {
+	if s.sessionStore == nil {
+		return "", errors.New("session store not configured")
+	}
+
+	sessionID := uuid.NewString()
+	token, err := s.generateToken(userID, sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	ttl := time.Duration(s.jwtExpireHours) * time.Hour
+	if err := s.sessionStore.SetCurrentSession(ctx, userID, sessionID, ttl); err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
 // generateToken 生成 JWT Token
-func (s *Service) generateToken(userID int) (string, error) {
+func (s *Service) generateToken(userID int, sessionID string) (string, error) {
 	now := time.Now()
 	expiresAt := now.Add(time.Duration(s.jwtExpireHours) * time.Hour)
 
 	// 创建 Claims
 	claims := jwt.MapClaims{
-		"user_id": userID,
-		"iat":     now.Unix(),       // 签发时间
-		"exp":     expiresAt.Unix(), // 过期时间
-		"nbf":     now.Unix(),       // 生效时间
+		"user_id":    userID,
+		"session_id": sessionID,
+		"iat":        now.Unix(),       // 签发时间
+		"exp":        expiresAt.Unix(), // 过期时间
+		"nbf":        now.Unix(),       // 生效时间
 	}
 
 	// 创建 Token

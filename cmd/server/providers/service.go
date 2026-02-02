@@ -30,6 +30,7 @@ func ProvideServiceSet(
 	uow *postgres.UnitOfWork,
 	cache *redis.CacheService,
 	rankingStore *redis.RankingStore,
+	sessionStore authApp.SessionStore,
 	wechatAuth *wechat.AuthService,
 	eventPublisher shared.EventPublisher,
 ) *ServiceSet {
@@ -43,6 +44,7 @@ func ProvideServiceSet(
 			wechatAuth.GetOpenID,
 			cfg.JWT.Secret,
 			cfg.JWT.ExpireHours,
+			sessionStore,
 		),
 		Pet: petApp.NewService(
 			repos.Pet,

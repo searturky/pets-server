@@ -2,17 +2,20 @@
 package middleware
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
+	authApp "pets-server/internal/application/auth"
 	"pets-server/internal/pkg/response"
 )
 
 // JWTConfig JWT 配置
 type JWTConfig struct {
-	Secret string
+	Secret       string
+	SessionStore authApp.SessionStore
 }
 
 // AuthMiddleware JWT 认证中间件
@@ -58,6 +61,31 @@ func AuthMiddleware(cfg JWTConfig) gin.HandlerFunc {
 		userID, ok := claims["user_id"].(float64)
 		if !ok {
 			response.Unauthorized(c, "invalid user id in token")
+			c.Abort()
+			return
+		}
+
+		sessionID, ok := claims["session_id"].(string)
+		if !ok || sessionID == "" {
+			response.Unauthorized(c, "invalid session id in token")
+			c.Abort()
+			return
+		}
+
+		if cfg.SessionStore == nil {
+			response.Error(c, http.StatusInternalServerError, "session store not configured")
+			c.Abort()
+			return
+		}
+
+		currentSessionID, err := cfg.SessionStore.GetCurrentSession(c.Request.Context(), int(userID))
+		if err != nil {
+			response.Error(c, http.StatusInternalServerError, "session validation failed")
+			c.Abort()
+			return
+		}
+		if currentSessionID == "" || currentSessionID != sessionID {
+			response.Unauthorized(c, "session expired or logged in elsewhere")
 			c.Abort()
 			return
 		}

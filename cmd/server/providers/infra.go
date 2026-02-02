@@ -7,6 +7,7 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
+	authApp "pets-server/internal/application/auth"
 	"pets-server/internal/domain/shared"
 	"pets-server/internal/infrastructure/external/wechat"
 	"pets-server/internal/infrastructure/messaging"
@@ -124,6 +125,11 @@ func ProvideCacheService(client *goredis.Client) *redis.CacheService {
 // ProvideRankingStore 提供排行榜存储
 func ProvideRankingStore(client *goredis.Client) *redis.RankingStore {
 	return redis.NewRankingStore(client)
+}
+
+// ProvideAuthSessionStore 提供认证会话存储
+func ProvideAuthSessionStore(client *goredis.Client) authApp.SessionStore {
+	return redis.NewAuthSessionStore(client)
 }
 
 // ProvideUnitOfWork 提供工作单元

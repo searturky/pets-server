@@ -29,6 +29,7 @@ func InitializeApp() (*App, func(), error) {
 		providers.ProvideWechatAuth,
 		providers.ProvideCacheService,
 		providers.ProvideRankingStore,
+		providers.ProvideAuthSessionStore,
 		providers.ProvideUnitOfWork,
 
 		// 仓储

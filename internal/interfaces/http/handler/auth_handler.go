@@ -31,6 +31,8 @@ func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup) {
 // RegisterAuthRoutes 注册需要认证的路由
 func (h *AuthHandler) RegisterAuthRoutes(r *gin.RouterGroup) {
 	r.GET("/me", h.GetCurrentUser)
+	r.POST("/logout", h.Logout)
+	r.POST("/kick", h.KickUser)
 }
 
 // Login 账号密码登录
@@ -137,4 +139,62 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	}
 
 	response.Success(c, userInfo)
+}
+
+// Logout 退出登录
+// @Summary      退出登录
+// @Description  清除当前用户会话
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200 {object} response.Response "退出成功"
+// @Failure      401 {object} response.Response "未授权"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == 0 {
+		response.Unauthorized(c, "unauthorized")
+		return
+	}
+
+	if err := h.authService.Logout(c.Request.Context(), userID); err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.SuccessWithMessage(c, "logout success", nil)
+}
+
+// KickUser 主动踢下线
+// @Summary      主动踢下线
+// @Description  清除指定用户会话
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Param        request body auth.KickRequest true "踢下线请求"
+// @Success      200 {object} response.Response "踢下线成功"
+// @Failure      400 {object} response.Response "请求参数错误"
+// @Failure      401 {object} response.Response "未授权"
+// @Failure      500 {object} response.Response "服务器错误"
+// @Router       /auth/kick [post]
+func (h *AuthHandler) KickUser(c *gin.Context) {
+	var req auth.KickRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if req.UserID <= 0 {
+		response.Error(c, http.StatusBadRequest, "invalid user id")
+		return
+	}
+
+	if err := h.authService.KickUser(c.Request.Context(), req.UserID); err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.SuccessWithMessage(c, "kick success", nil)
 }

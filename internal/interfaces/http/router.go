@@ -26,6 +26,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	authApp "pets-server/internal/application/auth"
 	docs "pets-server/internal/interfaces/http/docs"
 	"pets-server/internal/interfaces/http/handler"
 	"pets-server/internal/interfaces/http/middleware"
@@ -48,6 +49,7 @@ type RouterConfig struct {
 	SocialHandler  *handler.SocialHandler
 	RankingHandler *handler.RankingHandler
 	JWTSecret      string
+	SessionStore   authApp.SessionStore
 	ServerMode     config.ServerMode // 服务器模式，用于控制 Swagger 开关
 }
 
@@ -94,7 +96,10 @@ func healthCheck(c *gin.Context) {
 func setupV1Routes(api *gin.RouterGroup, cfg RouterConfig) {
 	// 创建认证中间件
 	authMiddleware := middleware.AuthMiddleware(
-		middleware.JWTConfig{Secret: cfg.JWTSecret},
+		middleware.JWTConfig{
+			Secret:       cfg.JWTSecret,
+			SessionStore: cfg.SessionStore,
+		},
 	)
 
 	// 公开路由（无需认证）

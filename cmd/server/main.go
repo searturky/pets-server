@@ -30,7 +30,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	// 优雅关闭
+	// 关闭
 	if err := app.Shutdown(context.Background()); err != nil {
 		log.Printf("Shutdown error: %v", err)
 	}

@@ -44,6 +44,7 @@ func InitializeApp() (*App, func(), error) {
 	}
 	cacheService := providers.ProvideCacheService(client)
 	rankingStore := providers.ProvideRankingStore(client)
+	sessionStore := providers.ProvideAuthSessionStore(client)
 	authService := providers.ProvideWechatAuth(config)
 	eventPublisher, cleanup3, err := providers.ProvideEventPublisher(config)
 	if err != nil {
@@ -51,10 +52,10 @@ func InitializeApp() (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	serviceSet := providers.ProvideServiceSet(config, repoSet, speciesRegistry, speciesFusionRegistry, unitOfWork, cacheService, rankingStore, authService, eventPublisher)
+	serviceSet := providers.ProvideServiceSet(config, repoSet, speciesRegistry, speciesFusionRegistry, unitOfWork, cacheService, rankingStore, sessionStore, authService, eventPublisher)
 	hub := providers.ProvideWSHub()
 	handler := providers.ProvideWSHandler(hub)
-	engine := providers.ProvideRouter(config, serviceSet, handler)
+	engine := providers.ProvideRouter(config, serviceSet, handler, sessionStore)
 	scheduler := providers.ProvideScheduler(repoSet, unitOfWork)
 	app := NewApp(config, engine, hub, scheduler)
 	return app, func() {

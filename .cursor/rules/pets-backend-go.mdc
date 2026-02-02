@@ -1,0 +1,47 @@
+---
+alwaysApply: false
+---
+# Go DDD Backend Rule
+
+## 项目上下文
+- 架构：DDD 分层
+- 技术栈：Go + PGSQL + Redis + NATS
+
+## 分层与依赖方向
+- `interfaces -> application -> domain`
+- `infrastructure` 只通过接口注入到 `application/domain`
+- `domain` 不依赖 `infrastructure/interfaces`，避免外部实现细节污染
+
+## 命名与结构
+- `domain` 定义实体/值对象/领域服务/仓储接口
+- `application` 负责用例编排、事务边界、DTO 转换
+- `infrastructure` 放 PGSQL/Redis/NATS 具体实现与外部适配
+- `interfaces` 仅做协议层适配（HTTP/WS），不做业务规则
+
+## 错误处理与日志
+- 使用 `fmt.Errorf("...: %w", err)` 包装，保留根因
+- 只在边界层记录日志（HTTP/WS/定时任务），领域逻辑不直接打印
+- 返回给客户端的错误使用统一的错误码/消息结构
+
+## PGSQL 访问规范
+- 事务边界由 `application` 控制，仓储只负责数据访问
+- 查询/命令分离：读多用只读方法，写操作集中在仓储实现
+- 避免在领域对象中出现 SQL 或 ORM 细节
+
+## Redis 规范
+- 缓存键加业务前缀：`pets:<entity>:<id>`
+- 缓存失效与重建在 `application` 层处理
+- 严禁在 `domain` 直接访问 Redis
+
+## NATS 规范
+- 事件命名：`pets.<bounded_context>.<event>`
+- 发布在 `application` 或 `infrastructure` 边界处
+- 订阅处理只做编排，业务规则仍在 `domain`
+
+## 简短示例
+```go
+// application: wrap error and keep root cause
+if err := s.repo.Save(ctx, pet); err != nil {
+	return fmt.Errorf("save pet failed: %w", err)
+}
+```
