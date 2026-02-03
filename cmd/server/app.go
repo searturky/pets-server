@@ -55,6 +55,13 @@ func (a *App) Run() error {
 
 	// 启动 HTTP 服务
 	log.Printf("Server starting on %s", a.server.Addr)
+	if a.cfg.Server.Mode == config.ModeDebug || a.cfg.Server.Mode == config.ModeTest {
+		host := a.cfg.Server.Host
+		if host == "" || host == "0.0.0.0" {
+			host = "localhost"
+		}
+		log.Printf("Swagger URL: http://%s:%d/swagger/v1/index.html", host, a.cfg.Server.Port)
+	}
 	if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("server failed: %w", err)
 	}
