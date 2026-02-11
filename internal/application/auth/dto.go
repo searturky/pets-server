@@ -31,8 +31,8 @@ type UpdateProfileRequest struct {
 
 // LoginRequest 账号密码登录请求
 type LoginRequest struct {
-	Username string `json:"username" binding:"required"` // 用户名
-	Password string `json:"password" binding:"required"` // 密码
+	Username string `json:"username" binding:"required,min=6,max=20,alphanum"` // 用户名
+	Password string `json:"password" binding:"required,min=6,max=32"`          // 密码
 }
 
 // RegisterRequest 账号注册请求

@@ -3,8 +3,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	petApp "pets-server/internal/application/pet"
@@ -67,10 +65,10 @@ func (h *PetHandler) GetMyPet(c *gin.Context) {
 	pet, err := h.petService.GetPetDetail(c.Request.Context(), userID)
 	if err != nil {
 		if err == petApp.ErrPetNotFound {
-			response.Error(c, http.StatusNotFound, "还没有宠物，快去领养一只吧！")
+			response.SuccessWithMessageAndCode(c, response.CodePetNotFound, "还没有宠物，快去领养一只吧！", nil)
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.Error(c, response.CodeInternalError, err.Error())
 		return
 	}
 
@@ -115,7 +113,7 @@ func (h *PetHandler) Feed(c *gin.Context) {
 	// 2. 绑定请求参数
 	var req petApp.FeedPetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
@@ -130,7 +128,7 @@ func (h *PetHandler) Feed(c *gin.Context) {
 	//   - 发布领域事件到 MQ
 	result, err := h.petService.FeedPet(c.Request.Context(), userID, req)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
@@ -156,17 +154,17 @@ func (h *PetHandler) CreatePet(c *gin.Context) {
 
 	var req petApp.CreatePetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
 	result, err := h.petService.CreatePet(c.Request.Context(), userID, req)
 	if err != nil {
 		if err == petApp.ErrAlreadyHasPet {
-			response.Error(c, http.StatusConflict, err.Error())
+			response.Error(c, response.CodeConflict, err.Error())
 			return
 		}
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.Error(c, response.CodeInternalError, err.Error())
 		return
 	}
 
@@ -189,7 +187,7 @@ func (h *PetHandler) Play(c *gin.Context) {
 
 	result, err := h.petService.PlayWithPet(c.Request.Context(), userID)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
@@ -212,7 +210,7 @@ func (h *PetHandler) Clean(c *gin.Context) {
 
 	result, err := h.petService.CleanPet(c.Request.Context(), userID)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
