@@ -14,8 +14,8 @@ type User struct {
 	ID          int       // 用户唯一标识
 	Username    string    // 用户名（用于账号密码登录）
 	Password    string    // 密码哈希（用于账号密码登录）
-	OpenID      string    // 微信 OpenID
-	UnionID     string    // 微信 UnionID
+	OpenID      *string   // 微信 OpenID
+	UnionID     *string   // 微信 UnionID
 	Nickname    string    // 昵称
 	AvatarURL   string    // 头像URL
 	Coins       int       // 金币（普通货币）
@@ -28,7 +28,7 @@ type User struct {
 func NewUser(openID, nickname, avatarURL string) *User {
 	now := time.Now()
 	return &User{
-		OpenID:      openID,
+		OpenID:      &openID,
 		Nickname:    nickname,
 		AvatarURL:   avatarURL,
 		Coins:       100, // 初始金币
@@ -105,4 +105,3 @@ func NewUserWithPassword(username, password, nickname string) (*User, error) {
 func (u *User) VerifyPassword(password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 }
-

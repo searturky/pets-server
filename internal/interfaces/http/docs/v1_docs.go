@@ -1459,11 +1459,15 @@ const docTemplatev1 = `{
             "properties": {
                 "password": {
                     "description": "密码",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 32,
+                    "minLength": 6
                 },
                 "username": {
                     "description": "用户名",
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 6
                 }
             }
         },
@@ -1884,11 +1888,36 @@ const docTemplatev1 = `{
                 }
             }
         },
+        "response.CustomCode": {
+            "type": "integer",
+            "enum": [
+                0,
+                40000,
+                40100,
+                40300,
+                40400,
+                40900,
+                50000,
+                50300,
+                300100
+            ],
+            "x-enum-varnames": [
+                "CodeSuccess",
+                "CodeBadRequest",
+                "CodeUnauthorized",
+                "CodeForbidden",
+                "CodeNotFound",
+                "CodeConflict",
+                "CodeInternalError",
+                "CodeServiceUnavailable",
+                "CodePetNotFound"
+            ]
+        },
         "response.Response": {
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "integer"
+                    "$ref": "#/definitions/response.CustomCode"
                 },
                 "data": {},
                 "message": {

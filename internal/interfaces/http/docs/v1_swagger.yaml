@@ -11,9 +11,13 @@ definitions:
     properties:
       password:
         description: 密码
+        maxLength: 32
+        minLength: 6
         type: string
       username:
         description: 用户名
+        maxLength: 20
+        minLength: 6
         type: string
     required:
     - password
@@ -298,10 +302,32 @@ definitions:
       type:
         $ref: '#/definitions/ranking.RankType'
     type: object
+  response.CustomCode:
+    enum:
+    - 0
+    - 40000
+    - 40100
+    - 40300
+    - 40400
+    - 40900
+    - 50000
+    - 50300
+    - 300100
+    type: integer
+    x-enum-varnames:
+    - CodeSuccess
+    - CodeBadRequest
+    - CodeUnauthorized
+    - CodeForbidden
+    - CodeNotFound
+    - CodeConflict
+    - CodeInternalError
+    - CodeServiceUnavailable
+    - CodePetNotFound
   response.Response:
     properties:
       code:
-        type: integer
+        $ref: '#/definitions/response.CustomCode'
       data: {}
       message:
         type: string

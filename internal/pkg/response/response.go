@@ -11,7 +11,7 @@ import (
 type Response struct {
 	Code    CustomCode `json:"code"`
 	Message string     `json:"message"`
-	Data    any        `json:"data,omitempty"`
+	Data    any        `json:"data"`
 }
 
 // Success 成功响应
@@ -55,6 +55,7 @@ func Error(c *gin.Context, code CustomCode, message string) {
 	c.JSON(http.StatusInternalServerError, Response{
 		Code:    code,
 		Message: message,
+		Data:    nil,
 	})
 }
 

@@ -2,8 +2,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	"pets-server/internal/application/ranking"
@@ -45,16 +43,15 @@ func (h *RankingHandler) GetRanking(c *gin.Context) {
 
 	var req ranking.RankingRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
 	result, err := h.rankingService.GetRanking(c.Request.Context(), userID, req)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.Error(c, response.CodeInternalError, err.Error())
 		return
 	}
 
 	response.Success(c, result)
 }
-

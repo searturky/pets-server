@@ -2,8 +2,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	"pets-server/internal/application/auth"
@@ -50,13 +48,13 @@ func (h *AuthHandler) RegisterAuthRoutes(r *gin.RouterGroup) {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req auth.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
 	result, err := h.authService.Login(c.Request.Context(), req)
 	if err != nil {
-		response.Error(c, http.StatusUnauthorized, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
@@ -78,13 +76,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req auth.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
 	result, err := h.authService.Register(c.Request.Context(), req)
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
@@ -105,13 +103,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 func (h *AuthHandler) WxLogin(c *gin.Context) {
 	var req auth.WxLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 
 	result, err := h.authService.WxLogin(c.Request.Context(), req)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.Error(c, response.CodeInternalError, err.Error())
 		return
 	}
 
@@ -134,7 +132,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 
 	userInfo, err := h.authService.GetUserInfo(c.Request.Context(), userID)
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.Error(c, response.CodeInternalError, err.Error())
 		return
 	}
 
@@ -160,7 +158,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	if err := h.authService.Logout(c.Request.Context(), userID); err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.Error(c, response.CodeInternalError, err.Error())
 		return
 	}
 
@@ -183,16 +181,16 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) KickUser(c *gin.Context) {
 	var req auth.KickRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, err.Error())
+		response.Error(c, response.CodeBadRequest, err.Error())
 		return
 	}
 	if req.UserID <= 0 {
-		response.Error(c, http.StatusBadRequest, "invalid user id")
+		response.Error(c, response.CodeBadRequest, "invalid user id")
 		return
 	}
 
 	if err := h.authService.KickUser(c.Request.Context(), req.UserID); err != nil {
-		response.Error(c, http.StatusInternalServerError, err.Error())
+		response.Error(c, response.CodeInternalError, err.Error())
 		return
 	}
 
