@@ -50,7 +50,7 @@ func (a *App) Run() error {
 	// 启动 WebSocket Hub
 	go a.wsHub.Run()
 
-	// 启动定时任务
+	// 启动定时任务（当前仅保留初始化，不执行状态衰减）
 	a.scheduler.Start()
 
 	// 启动 HTTP 服务

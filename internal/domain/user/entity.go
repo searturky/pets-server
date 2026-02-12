@@ -20,6 +20,7 @@ type User struct {
 	AvatarURL   string    // 头像URL
 	Coins       int       // 金币（普通货币）
 	Diamonds    int       // 钻石（高级货币）
+	ActivePetID *int      // 当前主宠物ID
 	CreatedAt   time.Time // 创建时间
 	LastLoginAt time.Time // 最后登录时间
 }

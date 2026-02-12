@@ -213,6 +213,31 @@ definitions:
         - $ref: '#/definitions/pet.StatusDTO'
         description: 状态
     type: object
+  pet.PetStatusDTO:
+    properties:
+      cleanliness:
+        type: integer
+      energy:
+        type: integer
+      happiness:
+        type: integer
+      hunger:
+        type: integer
+      isDirty:
+        type: boolean
+      isHungry:
+        type: boolean
+      isTired:
+        type: boolean
+      isUnhappy:
+        type: boolean
+      revision:
+        type: integer
+      serverTime:
+        type: string
+      statusUpdatedAt:
+        type: string
+    type: object
   pet.PlayPetResponse:
     properties:
       energy:
@@ -895,6 +920,50 @@ paths:
       security:
       - Bearer: []
       summary: 和宠物玩耍
+      tags:
+      - pet
+  /pet/status:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户宠物的轻量状态信息（实时状态与版本信息）
+      parameters:
+      - description: 宠物ID
+        in: query
+        name: petId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/pet.PetStatusDTO'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/response.Response'
+        "403":
+          description: 非宠物主人
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: 还没有宠物
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - Bearer: []
+      summary: 获取宠物轻量状态
       tags:
       - pet
   /ranking:

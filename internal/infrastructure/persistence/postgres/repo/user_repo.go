@@ -100,6 +100,7 @@ func (r *UserRepository) toDomain(m *model.User) *user.User {
 		AvatarURL:   m.AvatarURL,
 		Coins:       m.Coins,
 		Diamonds:    m.Diamonds,
+		ActivePetID: m.ActivePetID,
 		CreatedAt:   m.CreatedAt,
 		LastLoginAt: m.LastLoginAt,
 	}
@@ -115,6 +116,7 @@ func (r *UserRepository) toModel(u *user.User) *model.User {
 		AvatarURL:   u.AvatarURL,
 		Coins:       u.Coins,
 		Diamonds:    u.Diamonds,
+		ActivePetID: u.ActivePetID,
 		LastLoginAt: u.LastLoginAt,
 	}
 	m.ID = u.ID

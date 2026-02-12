@@ -34,6 +34,9 @@ func ProvideServiceSet(
 	wechatAuth *wechat.AuthService,
 	eventPublisher shared.EventPublisher,
 ) *ServiceSet {
+	// Pet 服务不再使用缓存，保留参数仅为兼容现有依赖注入签名。
+	_ = cache
+
 	// 创建领域服务（使用注入的注册表）
 	petDomainService := pet.NewDomainService(repos.Pet, speciesRegistry, fusionRegistry)
 
@@ -47,12 +50,13 @@ func ProvideServiceSet(
 			sessionStore,
 		),
 		Pet: petApp.NewService(
+			repos.User,
 			repos.Pet,
 			repos.Item,
 			petDomainService,
 			uow,
 			eventPublisher,
-			cache,
+			nil,
 		),
 		Social: socialApp.NewService(
 			repos.Friend,

@@ -2,6 +2,8 @@
 // DTO 数据传输对象
 package pet
 
+import "time"
+
 // CreatePetRequest 创建宠物请求
 type CreatePetRequest struct {
 	Name      string `json:"name" binding:"required,min=1,max=20"` // 宠物名称
@@ -16,6 +18,16 @@ type CreatePetResponse struct {
 // FeedPetRequest 喂食请求
 type FeedPetRequest struct {
 	FoodItemID int `json:"foodItemId" binding:"required"` // 食物道具ID
+}
+
+// SetActivePetRequest 设置主宠物请求
+type SetActivePetRequest struct {
+	PetID int `json:"petId" binding:"required"` // 主宠物ID
+}
+
+// SetActivePetResponse 设置主宠物响应
+type SetActivePetResponse struct {
+	ActivePetID int `json:"activePetId"`
 }
 
 // FeedPetResponse 喂食响应
@@ -111,6 +123,21 @@ type PetSimpleDTO struct {
 	Level     int    `json:"level"`
 	Stage     string `json:"stage"`
 	OwnerName string `json:"ownerName,omitempty"`
+}
+
+// PetStatusDTO 宠物轻量状态 DTO
+type PetStatusDTO struct {
+	Hunger          int       `json:"hunger"`
+	Happiness       int       `json:"happiness"`
+	Cleanliness     int       `json:"cleanliness"`
+	Energy          int       `json:"energy"`
+	IsHungry        bool      `json:"isHungry"`
+	IsUnhappy       bool      `json:"isUnhappy"`
+	IsDirty         bool      `json:"isDirty"`
+	IsTired         bool      `json:"isTired"`
+	StatusUpdatedAt time.Time `json:"statusUpdatedAt"`
+	Revision        int64     `json:"revision"`
+	ServerTime      time.Time `json:"serverTime"`
 }
 
 // --- 繁殖相关 DTO ---

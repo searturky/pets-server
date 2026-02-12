@@ -14,6 +14,7 @@ type User struct {
 	AvatarURL   string    `gorm:"column:avatar_url;type:varchar(256);comment:头像URL"`
 	Coins       int       `gorm:"default:0;comment:金币数量"`
 	Diamonds    int       `gorm:"default:0;comment:钻石数量"`
+	ActivePetID *int      `gorm:"column:active_pet_id;index;comment:当前主宠物ID"`
 	LastLoginAt time.Time `gorm:"column:last_login_at;comment:最后登录时间"`
 }
 

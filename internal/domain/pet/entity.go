@@ -5,6 +5,8 @@ package pet
 import (
 	"errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Stage 成长阶段
@@ -53,6 +55,7 @@ func (f FoodType) GetHungerRestore() int {
 // Pet 宠物实体（聚合根）
 type Pet struct {
 	ID     int
+	UUID   uuid.UUID
 	UserID int
 	Name   string
 
@@ -61,11 +64,11 @@ type Pet struct {
 	Gender    Gender    // 性别
 
 	// 基因与衍生属性
-	Gene              Gene             // 基因
-	Appearance        Appearance       // 通用外观
+	Gene              Gene              // 基因
+	Appearance        Appearance        // 通用外观
 	SpecialAppearance SpecialAppearance // 物种特有外观
-	Personality       Personality      // 性格
-	Skill             Skill            // 技能
+	Personality       Personality       // 性格
+	Skill             Skill             // 技能
 
 	// 成长状态
 	Stage Stage
@@ -85,11 +88,13 @@ type Pet struct {
 	LastBreedAt *time.Time // 上次繁殖时间
 
 	// 时间记录
-	LastFedAt     time.Time
-	LastPlayedAt  time.Time
-	LastCleanedAt time.Time
-	BornAt        time.Time
-	CreatedAt     time.Time
+	LastFedAt       time.Time
+	LastPlayedAt    time.Time
+	LastCleanedAt   time.Time
+	BornAt          time.Time
+	CreatedAt       time.Time
+	StatusUpdatedAt time.Time
+	Revision        int64
 
 	// 领域事件收集
 	events []any
@@ -134,6 +139,8 @@ func NewPetWithSpecies(userID int, name string, speciesID SpeciesID, genderRule 
 		Generation:        0,
 		BornAt:            now,
 		CreatedAt:         now,
+		StatusUpdatedAt:   now,
+		Revision:          0,
 	}
 }
 
@@ -163,6 +170,8 @@ func NewPetFromBreeding(userID int, name string, speciesID SpeciesID, gene Gene,
 		Generation:        generation,
 		BornAt:            now,
 		CreatedAt:         now,
+		StatusUpdatedAt:   now,
+		Revision:          0,
 	}
 }
 
@@ -347,6 +356,26 @@ func (p *Pet) DecayStatus(hours float64) {
 	p.Energy = minInt(p.Energy+int(10*hours), 100)
 }
 
+// StatusAt 获取指定时间点的状态快照（不修改实体）
+func (p *Pet) StatusAt(now time.Time) (hunger, happiness, cleanliness, energy int) {
+	snapshot := *p
+
+	anchor := snapshot.StatusUpdatedAt
+	if anchor.IsZero() {
+		anchor = now
+	}
+	if now.Before(anchor) {
+		return snapshot.Hunger, snapshot.Happiness, snapshot.Cleanliness, snapshot.Energy
+	}
+
+	hours := now.Sub(anchor).Hours()
+	if hours > 0 {
+		snapshot.DecayStatus(hours)
+	}
+
+	return snapshot.Hunger, snapshot.Happiness, snapshot.Cleanliness, snapshot.Energy
+}
+
 // --- 成长与进化 ---
 
 // addExp 增加经验
@@ -461,17 +490,17 @@ func (p *Pet) Events() []any {
 
 // 领域错误
 var (
-	ErrPetIsEgg            = errors.New("宠物还在蛋里")
-	ErrPetIsFull           = errors.New("宠物已经很饱了")
-	ErrPetIsHappy          = errors.New("宠物已经很开心了")
-	ErrPetIsClean          = errors.New("宠物已经很干净了")
-	ErrPetIsTired          = errors.New("宠物太累了需要休息")
-	ErrPetNotFound         = errors.New("宠物不存在")
-	ErrPetNotMature        = errors.New("宠物还未成年")
-	ErrPetLevelTooLow      = errors.New("宠物等级不足")
-	ErrPetUnhappy          = errors.New("宠物不够开心")
-	ErrBreedCooldown       = errors.New("繁殖冷却中")
-	ErrIncompatibleGender  = errors.New("性别不兼容")
-	ErrCannotSelfBreed     = errors.New("该物种不能自我繁殖")
-	ErrSpeciesNotFound     = errors.New("物种不存在")
+	ErrPetIsEgg           = errors.New("宠物还在蛋里")
+	ErrPetIsFull          = errors.New("宠物已经很饱了")
+	ErrPetIsHappy         = errors.New("宠物已经很开心了")
+	ErrPetIsClean         = errors.New("宠物已经很干净了")
+	ErrPetIsTired         = errors.New("宠物太累了需要休息")
+	ErrPetNotFound        = errors.New("宠物不存在")
+	ErrPetNotMature       = errors.New("宠物还未成年")
+	ErrPetLevelTooLow     = errors.New("宠物等级不足")
+	ErrPetUnhappy         = errors.New("宠物不够开心")
+	ErrBreedCooldown      = errors.New("繁殖冷却中")
+	ErrIncompatibleGender = errors.New("性别不兼容")
+	ErrCannotSelfBreed    = errors.New("该物种不能自我繁殖")
+	ErrSpeciesNotFound    = errors.New("物种不存在")
 )

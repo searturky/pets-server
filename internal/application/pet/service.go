@@ -12,10 +12,12 @@ import (
 	"pets-server/internal/domain/item"
 	"pets-server/internal/domain/pet"
 	"pets-server/internal/domain/shared"
+	"pets-server/internal/domain/user"
 )
 
 // Service 宠物应用服务
 type Service struct {
+	userRepo     user.Repository
 	petRepo      pet.Repository
 	itemRepo     item.Repository
 	petDomainSvc *pet.DomainService // 领域服务
@@ -33,6 +35,7 @@ type CacheService interface {
 
 // NewService 创建宠物应用服务
 func NewService(
+	userRepo user.Repository,
 	petRepo pet.Repository,
 	itemRepo item.Repository,
 	petDomainSvc *pet.DomainService,
@@ -41,6 +44,7 @@ func NewService(
 	cache CacheService,
 ) *Service {
 	return &Service{
+		userRepo:     userRepo,
 		petRepo:      petRepo,
 		itemRepo:     itemRepo,
 		petDomainSvc: petDomainSvc,
@@ -50,32 +54,45 @@ func NewService(
 	}
 }
 
+func (s *Service) getActivePet(ctx context.Context, userID int) (*pet.Pet, error) {
+	u, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 兼容老数据：未设置主宠物时退回第一只宠物
+	if u.ActivePetID == nil {
+		return s.petRepo.FindByUserID(ctx, userID)
+	}
+
+	p, err := s.petRepo.FindByID(ctx, *u.ActivePetID)
+	if err != nil {
+		// 兼容脏数据：主宠物不存在时退回第一只宠物
+		if errors.Is(err, pet.ErrPetNotFound) {
+			return s.petRepo.FindByUserID(ctx, userID)
+		}
+		return nil, err
+	}
+	if p.UserID != userID {
+		return nil, ErrNotPetOwner
+	}
+	return p, nil
+}
+
 // ============================================================
 // 读操作示例：获取宠物详情 (GET /api/pet)
 // 调用链路：
 //   Handler.GetMyPet()
-//     → Redis.Get() 尝试读缓存
-//     → 缓存未命中
-//       → AppService.GetPetDetail()
-//         → PetRepo.FindByUserID() 查询数据库
-//         → 组装 DTO
-//       → Redis.Set() 写入缓存
+//     → AppService.GetPetDetail()
+//       → PetRepo.FindByUserID() 查询数据库
+//       → 组装 DTO
 //     ← 返回 DTO
 // ============================================================
 
 // GetPetDetail 获取用户的宠物详情
 func (s *Service) GetPetDetail(ctx context.Context, userID int) (*PetDetailDTO, error) {
-	// 1. 尝试从缓存获取
-	if s.cache != nil {
-		cached, err := s.cache.GetPetDetail(ctx, userID)
-		if err == nil && cached != nil {
-			return cached, nil
-		}
-		// 缓存未命中或出错，继续查询数据库
-	}
-
-	// 2. 从数据库获取宠物实体
-	p, err := s.petRepo.FindByUserID(ctx, userID)
+	// 1. 从数据库获取宠物实体
+	p, err := s.getActivePet(ctx, userID)
 	if err != nil {
 		if errors.Is(err, pet.ErrPetNotFound) {
 			return nil, ErrPetNotFound
@@ -83,15 +100,61 @@ func (s *Service) GetPetDetail(ctx context.Context, userID int) (*PetDetailDTO, 
 		return nil, err
 	}
 
-	// 3. 将领域实体转换为 DTO
+	// 2. 将领域实体转换为 DTO
 	dto := s.toPetDetailDTO(p)
 
-	// 4. 写入缓存（异步或同步，这里用同步简化示例）
-	if s.cache != nil {
-		_ = s.cache.SetPetDetail(ctx, userID, dto, 5*time.Minute)
+	return dto, nil
+}
+
+// GetPetStatus 获取指定宠物轻量状态（只读计算，不落库）
+func (s *Service) GetPetStatus(ctx context.Context, userID, petID int) (*PetStatusDTO, error) {
+	p, err := s.petRepo.FindByID(ctx, petID)
+	if err != nil {
+		if errors.Is(err, pet.ErrPetNotFound) {
+			return nil, ErrPetNotFound
+		}
+		return nil, err
+	}
+	if p.UserID != userID {
+		return nil, ErrNotPetOwner
 	}
 
-	return dto, nil
+	now := time.Now()
+	hunger, happiness, cleanliness, energy := p.StatusAt(now)
+
+	return &PetStatusDTO{
+		Hunger:          hunger,
+		Happiness:       happiness,
+		Cleanliness:     cleanliness,
+		Energy:          energy,
+		IsHungry:        hunger < 30,
+		IsUnhappy:       happiness < 30,
+		IsDirty:         cleanliness < 30,
+		IsTired:         energy < 20,
+		StatusUpdatedAt: p.StatusUpdatedAt,
+		Revision:        p.Revision,
+		ServerTime:      now,
+	}, nil
+}
+
+// applyComputedStatus 将按时间差计算出的状态回填到实体（用于写操作前补算）
+func (s *Service) applyComputedStatus(p *pet.Pet, now time.Time) {
+	hunger, happiness, cleanliness, energy := p.StatusAt(now)
+	changed := p.Hunger != hunger ||
+		p.Happiness != happiness ||
+		p.Cleanliness != cleanliness ||
+		p.Energy != energy
+
+	p.Hunger = hunger
+	p.Happiness = happiness
+	p.Cleanliness = cleanliness
+	p.Energy = energy
+
+	// 零值锚点或状态发生变化时推进锚点与版本
+	if p.StatusUpdatedAt.IsZero() || changed {
+		p.StatusUpdatedAt = now
+		p.Revision++
+	}
 }
 
 // ============================================================
@@ -120,10 +183,11 @@ func (s *Service) FeedPet(ctx context.Context, userID int, req FeedPetRequest) (
 	// 1. 在事务中执行所有数据库操作
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
 		// 1.1 获取宠物实体
-		p, err := s.petRepo.FindByUserID(txCtx, userID)
+		p, err := s.getActivePet(txCtx, userID)
 		if err != nil {
 			return err
 		}
+		s.applyComputedStatus(p, time.Now())
 
 		// 1.2 获取道具定义，确定食物类型
 		itemDef, err := s.itemRepo.GetDefinition(txCtx, req.FoodItemID)
@@ -229,6 +293,16 @@ func (s *Service) CreatePet(ctx context.Context, userID int, req CreatePetReques
 		if err := s.petRepo.Save(txCtx, p); err != nil {
 			return err
 		}
+		u, err := s.userRepo.FindByID(txCtx, userID)
+		if err != nil {
+			return err
+		}
+		if u.ActivePetID == nil {
+			u.ActivePetID = &p.ID
+			if err := s.userRepo.Save(txCtx, u); err != nil {
+				return err
+			}
+		}
 
 		dto = s.toPetDetailDTO(p)
 		return nil
@@ -246,10 +320,11 @@ func (s *Service) PlayWithPet(ctx context.Context, userID int) (*PlayPetResponse
 	var response *PlayPetResponse
 
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
-		p, err := s.petRepo.FindByUserID(txCtx, userID)
+		p, err := s.getActivePet(txCtx, userID)
 		if err != nil {
 			return err
 		}
+		s.applyComputedStatus(p, time.Now())
 
 		oldLevel := p.Level
 
@@ -288,10 +363,11 @@ func (s *Service) CleanPet(ctx context.Context, userID int) (*CleanPetResponse, 
 	var response *CleanPetResponse
 
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
-		p, err := s.petRepo.FindByUserID(txCtx, userID)
+		p, err := s.getActivePet(txCtx, userID)
 		if err != nil {
 			return err
 		}
+		s.applyComputedStatus(p, time.Now())
 
 		if err := p.Clean(); err != nil {
 			return err
@@ -378,6 +454,7 @@ func (s *Service) BreedPets(ctx context.Context, userID int, req BreedPetsReques
 		if err != nil {
 			return err
 		}
+		s.applyComputedStatus(parent1, time.Now())
 		// 验证所有权
 		if parent1.UserID != userID {
 			return ErrNotPetOwner
@@ -392,6 +469,7 @@ func (s *Service) BreedPets(ctx context.Context, userID int, req BreedPetsReques
 			if err != nil {
 				return err
 			}
+			s.applyComputedStatus(parent2, time.Now())
 			// 验证所有权
 			if parent2.UserID != userID {
 				return ErrNotPetOwner
@@ -479,6 +557,7 @@ func (s *Service) CanBreed(ctx context.Context, userID int, parent1ID, parent2ID
 	if err != nil {
 		return nil, err
 	}
+	s.applyComputedStatus(parent1, time.Now())
 	if parent1.UserID != userID {
 		return &CanBreedResponse{CanBreed: false, Reason: "非宠物主人"}, nil
 	}
@@ -488,6 +567,7 @@ func (s *Service) CanBreed(ctx context.Context, userID int, parent1ID, parent2ID
 		if err != nil {
 			return nil, err
 		}
+		s.applyComputedStatus(parent2, time.Now())
 		if parent2.UserID != userID {
 			return &CanBreedResponse{CanBreed: false, Reason: "非宠物主人"}, nil
 		}
@@ -548,7 +628,7 @@ func (s *Service) PredictOffspring(ctx context.Context, req PredictOffspringRequ
 
 // GetPetScore 获取宠物评分
 func (s *Service) GetPetScore(ctx context.Context, userID int) (*GetPetScoreResponse, error) {
-	p, err := s.petRepo.FindByUserID(ctx, userID)
+	p, err := s.getActivePet(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -573,6 +653,35 @@ func (s *Service) GetPetScore(ctx context.Context, userID int) (*GetPetScoreResp
 			GenerationScore: p.Generation * 20,
 		},
 	}, nil
+}
+
+// SetActivePet 设置用户主宠物
+func (s *Service) SetActivePet(ctx context.Context, userID, petID int) (*SetActivePetResponse, error) {
+	err := s.uow.Do(ctx, func(txCtx context.Context) error {
+		p, err := s.petRepo.FindByID(txCtx, petID)
+		if err != nil {
+			return err
+		}
+		if p.UserID != userID {
+			return ErrNotPetOwner
+		}
+
+		u, err := s.userRepo.FindByID(txCtx, userID)
+		if err != nil {
+			return err
+		}
+		u.ActivePetID = &petID
+		return s.userRepo.Save(txCtx, u)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		_ = s.cache.DeletePetDetail(ctx, userID)
+	}
+
+	return &SetActivePetResponse{ActivePetID: petID}, nil
 }
 
 // GetAvailableSpecies 获取可用物种列表

@@ -822,6 +822,79 @@
                 }
             }
         },
+        "/pet/status": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取当前用户宠物的轻量状态信息（实时状态与版本信息）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pet"
+                ],
+                "summary": "获取宠物轻量状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "宠物ID",
+                        "name": "petId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/pet.PetStatusDTO"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "非宠物主人",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "还没有宠物",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/ranking": {
             "get": {
                 "security": [
@@ -1749,6 +1822,44 @@
                             "$ref": "#/definitions/pet.StatusDTO"
                         }
                     ]
+                }
+            }
+        },
+        "pet.PetStatusDTO": {
+            "type": "object",
+            "properties": {
+                "cleanliness": {
+                    "type": "integer"
+                },
+                "energy": {
+                    "type": "integer"
+                },
+                "happiness": {
+                    "type": "integer"
+                },
+                "hunger": {
+                    "type": "integer"
+                },
+                "isDirty": {
+                    "type": "boolean"
+                },
+                "isHungry": {
+                    "type": "boolean"
+                },
+                "isTired": {
+                    "type": "boolean"
+                },
+                "isUnhappy": {
+                    "type": "boolean"
+                },
+                "revision": {
+                    "type": "integer"
+                },
+                "serverTime": {
+                    "type": "string"
+                },
+                "statusUpdatedAt": {
+                    "type": "string"
                 }
             }
         },

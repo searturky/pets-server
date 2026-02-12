@@ -62,10 +62,12 @@ type Pet struct {
 	LastBreedAt *time.Time `gorm:"column:last_breed_at;comment:最后繁殖时间"`
 
 	// 时间记录
-	LastFedAt     time.Time `gorm:"column:last_fed_at;comment:最后喂食时间"`
-	LastPlayedAt  time.Time `gorm:"column:last_played_at;comment:最后玩耍时间"`
-	LastCleanedAt time.Time `gorm:"column:last_cleaned_at;comment:最后清洁时间"`
-	BornAt        time.Time `gorm:"column:born_at;comment:出生时间"`
+	LastFedAt       time.Time `gorm:"column:last_fed_at;comment:最后喂食时间"`
+	LastPlayedAt    time.Time `gorm:"column:last_played_at;comment:最后玩耍时间"`
+	LastCleanedAt   time.Time `gorm:"column:last_cleaned_at;comment:最后清洁时间"`
+	BornAt          time.Time `gorm:"column:born_at;comment:出生时间"`
+	StatusUpdatedAt time.Time `gorm:"column:status_updated_at;comment:状态更新时间"`
+	Revision        int64     `gorm:"column:revision;default:0;comment:版本号"`
 }
 
 // TableName 表名

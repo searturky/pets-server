@@ -34,8 +34,7 @@ func NewScheduler(
 
 // Start 启动定时任务
 func (s *Scheduler) Start() {
-	go s.runPetStatusDecay()
-	log.Println("Scheduler started")
+	log.Println("Scheduler initialized (pet status decay disabled)")
 }
 
 // Stop 停止定时任务
@@ -93,8 +92,11 @@ func (s *Scheduler) decayAllPetStatus() {
 // decayPetStatus 衰减单个宠物状态
 func (s *Scheduler) decayPetStatus(ctx context.Context, p *pet.Pet) {
 	err := s.uow.Do(ctx, func(txCtx context.Context) error {
+		now := time.Now()
 		// 衰减1小时的状态
 		p.DecayStatus(1.0)
+		p.StatusUpdatedAt = now
+		p.Revision++
 
 		// 检查是否需要发送警告
 		var events []shared.Event
@@ -103,7 +105,7 @@ func (s *Scheduler) decayPetStatus(ctx context.Context, p *pet.Pet) {
 				PetID:       p.ID,
 				UserID:      p.UserID,
 				WarningType: "hungry",
-				Timestamp:   time.Now(),
+				Timestamp:   now,
 			})
 		}
 		if p.IsUnhappy() {
@@ -111,7 +113,7 @@ func (s *Scheduler) decayPetStatus(ctx context.Context, p *pet.Pet) {
 				PetID:       p.ID,
 				UserID:      p.UserID,
 				WarningType: "unhappy",
-				Timestamp:   time.Now(),
+				Timestamp:   now,
 			})
 		}
 

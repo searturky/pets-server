@@ -168,6 +168,7 @@ func (r *PetRepository) toDomain(m *model.Pet) *pet.Pet {
 
 	p := &pet.Pet{
 		ID:        m.ID,
+		UUID:      m.UUID,
 		UserID:    m.UserID,
 		Name:      m.Name,
 		SpeciesID: pet.SpeciesID(m.SpeciesID),
@@ -198,22 +199,24 @@ func (r *PetRepository) toDomain(m *model.Pet) *pet.Pet {
 			Level:    int(m.SkillLevel),
 			Strength: int(m.SkillStrength),
 		},
-		Stage:         pet.Stage(m.Stage),
-		Exp:           m.Exp,
-		Level:         m.Level,
-		Hunger:        int(m.Hunger),
-		Happiness:     int(m.Happiness),
-		Cleanliness:   int(m.Cleanliness),
-		Energy:        int(m.Energy),
-		Parent1ID:     m.Parent1ID,
-		Parent2ID:     m.Parent2ID,
-		Generation:    m.Generation,
-		LastBreedAt:   m.LastBreedAt,
-		LastFedAt:     m.LastFedAt,
-		LastPlayedAt:  m.LastPlayedAt,
-		LastCleanedAt: m.LastCleanedAt,
-		BornAt:        m.BornAt,
-		CreatedAt:     m.CreatedAt,
+		Stage:           pet.Stage(m.Stage),
+		Exp:             m.Exp,
+		Level:           m.Level,
+		Hunger:          int(m.Hunger),
+		Happiness:       int(m.Happiness),
+		Cleanliness:     int(m.Cleanliness),
+		Energy:          int(m.Energy),
+		Parent1ID:       m.Parent1ID,
+		Parent2ID:       m.Parent2ID,
+		Generation:      m.Generation,
+		LastBreedAt:     m.LastBreedAt,
+		LastFedAt:       m.LastFedAt,
+		LastPlayedAt:    m.LastPlayedAt,
+		LastCleanedAt:   m.LastCleanedAt,
+		BornAt:          m.BornAt,
+		CreatedAt:       m.CreatedAt,
+		StatusUpdatedAt: m.StatusUpdatedAt,
+		Revision:        m.Revision,
 	}
 
 	return p
@@ -264,6 +267,8 @@ func (r *PetRepository) toModel(p *pet.Pet) *model.Pet {
 		LastPlayedAt:      p.LastPlayedAt,
 		LastCleanedAt:     p.LastCleanedAt,
 		BornAt:            p.BornAt,
+		StatusUpdatedAt:   p.StatusUpdatedAt,
+		Revision:          p.Revision,
 	}
 	m.ID = p.ID
 	return m

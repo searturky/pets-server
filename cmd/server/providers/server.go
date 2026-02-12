@@ -53,3 +53,4 @@ func ProvideWSHandler(hub *ws.Hub) *ws.Handler {
 func ProvideScheduler(repos *RepoSet, uow *postgres.UnitOfWork) *cron.Scheduler {
 	return cron.NewScheduler(repos.Pet, uow, nil)
 }
+
