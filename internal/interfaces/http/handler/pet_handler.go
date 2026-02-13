@@ -24,24 +24,14 @@ func NewPetHandler(petService *petApp.Service) *PetHandler {
 
 // RegisterRoutes 注册路由
 func (h *PetHandler) RegisterRoutes(r *gin.RouterGroup) {
-	r.GET("", h.GetMyPet)          // 获取我的宠物（读操作示例）
-	r.GET("/status", h.GetStatus)  // 获取轻量状态
-	r.PUT("/active", h.SetActive)  // 设置主宠物
-	r.POST("", h.CreatePet)        // 创建宠物
-	r.POST("/feed", h.Feed)        // 喂食（写操作示例）
-	r.POST("/play", h.Play)        // 玩耍
-	r.POST("/clean", h.Clean)      // 清洁
+	r.GET("", h.GetMyPet)         // 获取我的宠物（读操作示例）
+	r.GET("/status", h.GetStatus) // 获取轻量状态
+	r.PUT("/active", h.SetActive) // 设置主宠物
+	r.POST("", h.CreatePet)       // 创建宠物
+	r.POST("/feed", h.Feed)       // 喂食（写操作示例）
+	r.POST("/play", h.Play)       // 玩耍
+	r.POST("/clean", h.Clean)     // 清洁
 }
-
-// ============================================================
-// 读操作示例：获取宠物详情 GET /api/pet
-// 调用链路：
-//   Handler.GetMyPet()
-//     → AppService.GetPetDetail()
-//       → PetRepo.FindByUserID() 查询数据库
-//       → 组装 DTO
-//     ← 返回 DTO
-// ============================================================
 
 // GetMyPet 获取我的宠物
 // @Summary      获取我的宠物
